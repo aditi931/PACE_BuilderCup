@@ -1,0 +1,250 @@
+iso2,iso3,name,region,subregion,languages,population,population_year,gdp_usd,gdp_year,gdp_per_capita_usd,gdp_per_capita_year
+AF,AFG,Afghanistan,Asia,Southern Asia,"fa-AF,ps,uz-AF,tk",43844111,2025,14502158192,2022,357,2022
+AX,ALA,Åland Islands,Europe,Northern Europe,sv-AX,,,,,,
+AL,ALB,Albania,Europe,Southern Europe,"sq,el",2349580,2025,22977677861,2023,9528,2023
+DZ,DZA,Algeria,Africa,Northern Africa,ar-DZ,47435312,2025,239899491128,2023,5197,2023
+AS,ASM,American Samoa,Oceania,Polynesia,"en-AS,sm,to",46029,2025,871000000,2022,18017,2022
+AD,AND,Andorra,Europe,Southern Europe,ca,82904,2025,3727673593,2023,46103,2023
+AO,AGO,Angola,Africa,Sub-Saharan Africa,pt-AO,39040039,2025,84722957642,2023,2305,2023
+AI,AIA,Anguilla,Americas,Latin America and the Caribbean,en-AI,,,,,,
+AQ,ATA,Antarctica,,,,,,,,,
+AG,ATG,Antigua & Barbuda,Americas,Latin America and the Caribbean,en-AG,94209,2025,2033085185,2023,21787,2023
+AR,ARG,Argentina,Americas,Latin America and the Caribbean,"es-AR,en,it,de,fr,gn",45851378,2025,640591410664,2023,14067,2023
+AM,ARM,Armenia,Asia,Western Asia,hy,3086700,2025,24212134631,2023,8168,2023
+AW,ABW,Aruba,Americas,Latin America and the Caribbean,"nl-AW,pap,es,en",108785,2025,3544707788,2022,33032,2022
+AU,AUS,Australia,Oceania,Australia and New Zealand,en-AU,27614411,2025,1723827215335,2023,64660,2023
+AT,AUT,Austria,Europe,Western Europe,"de-AT,hr,hu,sl",9208163,2025,516034144116,2023,56510,2023
+AZ,AZE,Azerbaijan,Asia,Western Asia,"az,ru,hy",10246996,2025,72356176471,2023,7126,2023
+BS,BHS,Bahamas,Americas,Latin America and the Caribbean,en-BS,403033,2025,14338500000,2023,35897,2023
+BH,BHR,Bahrain,Asia,Western Asia,"ar-BH,en,fa,ur",1600366,2025,43205000000,2023,27396,2023
+BD,BGD,Bangladesh,Asia,Southern Asia,"bn-BD,en",175686899,2025,437415331041,2023,2551,2023
+BB,BRB,Barbados,Americas,Latin America and the Caribbean,en-BB,282623,2025,6393564190,2023,22645,2023
+BY,BLR,Belarus,Europe,Eastern Europe,"be,ru",9085991,2025,71857382746,2023,7829,2023
+BE,BEL,Belgium,Europe,Western Europe,"nl-BE,fr-BE,de-BE",11941781,2025,632216577075,2023,53669,2023
+BZ,BLZ,Belize,Americas,Latin America and the Caribbean,"en-BZ,es",422924,2025,3281500000,2023,7982,2023
+BJ,BEN,Benin,Africa,Sub-Saharan Africa,fr-BJ,14814460,2025,19673284686,2023,1394,2023
+BM,BMU,Bermuda,Americas,Northern America,"en-BM,pt",64555,2025,7827980000,2022,120897,2022
+BT,BTN,Bhutan,Asia,Southern Asia,dz,796682,2025,2898227713,2022,3711,2022
+BO,BOL,Bolivia,Americas,Latin America and the Caribbean,"es-BO,qu,ay",12581843,2025,45849832906,2023,3745,2023
+BQ,BES,Caribbean Netherlands,Americas,Latin America and the Caribbean,"nl,pap,en",,,,,,
+BA,BIH,Bosnia,Europe,Southern Europe,"bs,hr-BA,sr-BA",3140095,2025,27054889363,2023,8494,2023
+BW,BWA,Botswana,Africa,Sub-Saharan Africa,"en-BW,tn-BW",2562122,2025,19395765126,2023,7820,2023
+BV,BVT,Bouvet Island,Americas,Latin America and the Caribbean,,,,,,,
+BR,BRA,Brazil,Americas,Latin America and the Caribbean,"pt-BR,es,en,fr",212812405,2025,2173665655937,2023,10295,2023
+IO,IOT,British Indian Ocean Territory,Africa,Sub-Saharan Africa,en-IO,,,,,,
+VG,VGB,British Virgin Islands,Americas,Latin America and the Caribbean,en-VG,39732,2025,,,,
+BN,BRN,Brunei,Asia,South-eastern Asia,"ms-BN,en-BN",466330,2025,15128292954,2023,32963,2023
+BG,BGR,Bulgaria,Europe,Eastern Europe,"bg,tr-BG,rom",6433302,2025,101584384673,2023,15758,2023
+BF,BFA,Burkina Faso,Africa,Sub-Saharan Africa,"fr-BF,mos",24074580,2025,20324617839,2023,883,2023
+BI,BDI,Burundi,Africa,Sub-Saharan Africa,"fr-BI,rn",14390003,2025,2642161669,2023,193,2023
+CV,CPV,Cape Verde,Africa,Sub-Saharan Africa,pt-CV,527326,2025,2587252076,2023,4953,2023
+KH,KHM,Cambodia,Asia,South-eastern Asia,"km,fr,en",17847982,2025,31772759999,2023,1824,2023
+CM,CMR,Cameroon,Africa,Sub-Saharan Africa,"en-CM,fr-CM",29879337,2025,47945510090,2023,1690,2023
+CA,CAN,Canada,Americas,Northern America,"en-CA,fr-CA,iu",41651653,2025,2140085567791,2023,53437,2023
+KY,CYM,Cayman Islands,Americas,Latin America and the Caribbean,en-KY,75844,2025,6600844002,2022,92202,2022
+CF,CAF,Central African Republic,Africa,Sub-Saharan Africa,"fr-CF,sg,ln,kg",5513282,2025,2555492085,2023,496,2023
+TD,TCD,Chad,Africa,Sub-Saharan Africa,"fr-TD,ar-TD,sre",21003705,2025,13149325359,2023,681,2023
+CL,CHL,Chile,Americas,Latin America and the Caribbean,es-CL,19859921,2025,335533331669,2023,17068,2023
+CN,CHN,China,Asia,Eastern Asia,"zh-CN,yue,wuu,dta,ug,za",1406585000,2025,17794781986104,2023,12614,2023
+HK,HKG,Hong Kong,Asia,Eastern Asia,"zh-HK,yue,zh,en",7498900,2025,382054574299,2023,50697,2023
+MO,MAC,Macao,Asia,Eastern Asia,"zh,zh-MO,pt",685900,2025,47061843716,2023,69331,2023
+CX,CXR,Christmas Island,Oceania,Australia and New Zealand,"en,zh,ms-CX",,,,,,
+CC,CCK,Cocos Islands,Oceania,Australia and New Zealand,"ms-CC,en",,,,,,
+CO,COL,Colombia,Americas,Latin America and the Caribbean,es-CO,53425635,2025,363540156235,2023,6948,2023
+KM,COM,Comoros,Africa,Sub-Saharan Africa,"ar,fr-KM",882847,2025,1352380972,2023,1590,2023
+CG,COG,Congo - Brazzaville,Africa,Sub-Saharan Africa,"fr-CG,kg,ln-CG",6484437,2025,15321055818,2023,2478,2023
+CK,COK,Cook Islands,Oceania,Polynesia,"en-CK,mi",,,,,,
+CR,CRI,Costa Rica,Americas,Latin America and the Caribbean,"es-CR,en",5152950,2025,86497941439,2023,16942,2023
+HR,HRV,Croatia,Europe,Southern Europe,"hr-HR,sr",3876200,2025,82688842717,2023,21424,2023
+CU,CUB,Cuba,Americas,Latin America and the Caribbean,"es-CU,pap",10937203,2025,107351800000,2020,9605,2020
+CW,CUW,Curaçao,Americas,Latin America and the Caribbean,"nl,pap",156263,2025,3073840325,2022,20048,2022
+CY,CYP,Cyprus,Asia,Western Asia,"el-CY,tr-CY,en",1370754,2025,32229622669,2023,23963,2023
+CZ,CZE,Czechia,Europe,Eastern Europe,"cs,sk",10886878,2025,330858339872,2023,30454,2023
+KP,PRK,North Korea,Asia,Eastern Asia,ko-KP,26571036,2025,,,,
+CD,COD,Congo - Kinshasa,Africa,Sub-Saharan Africa,"fr-CD,ln,ktu,kg,sw,lua",112832473,2025,66383287003,2023,628,2023
+DK,DNK,Denmark,Europe,Northern Europe,"da-DK,en,fo,de-DK",6009169,2025,404198757538,2023,67967,2023
+DJ,DJI,Djibouti,Africa,Sub-Saharan Africa,"fr-DJ,ar,so-DJ,aa",1184076,2025,4098530514,2023,3555,2023
+DM,DMA,Dominica,Americas,Latin America and the Caribbean,en-DM,65871,2025,653992593,2023,9833,2023
+DO,DOM,Dominican Republic,Americas,Latin America and the Caribbean,es-DO,11520487,2025,121444279314,2023,10718,2023
+EC,ECU,Ecuador,Americas,Latin America and the Caribbean,es-EC,18289896,2025,118844826000,2023,6610,2023
+EG,EGY,Egypt,Africa,Northern Africa,"ar-EG,en,fr",118365995,2025,395926075163,2023,3457,2023
+SV,SLV,El Salvador,Americas,Latin America and the Caribbean,es-SV,6365503,2025,34015620000,2023,5391,2023
+GQ,GNQ,Equatorial Guinea,Africa,Sub-Saharan Africa,"es-GQ,fr,pt",1938431,2025,12116922539,2023,6558,2023
+ER,ERI,Eritrea,Africa,Sub-Saharan Africa,"aa-ER,ar,tig,kun,ti-ER",3607003,2025,2065001626,2011,689,2011
+EE,EST,Estonia,Europe,Northern Europe,"et,ru",1366475,2025,40744848828,2023,29735,2023
+SZ,SWZ,Eswatini,Africa,Sub-Saharan Africa,"en-SZ,ss-SZ",1256174,2025,4597855845,2023,3737,2023
+ET,ETH,Ethiopia,Africa,Sub-Saharan Africa,"am,en-ET,om-ET,ti-ET,so-ET,sid",135472051,2025,163697927594,2023,1272,2023
+FK,FLK,Falkland Islands,Americas,Latin America and the Caribbean,en-FK,,,,,,
+FO,FRO,Faroe Islands,Europe,Northern Europe,"fo,da-FO",54900,2025,3555929833,2022,65969,2022
+FJ,FJI,Fiji,Oceania,Melanesia,"en-FJ,fj",933154,2025,5494797541,2023,5946,2023
+FI,FIN,Finland,Europe,Northern Europe,"fi-FI,sv-FI,smn",5646436,2025,300187202696,2023,53759,2023
+FR,FRA,France,Europe,Western Europe,"fr-FR,frp,br,co,ca,eu,oc",68720337,2025,3030904089608,2023,44329,2023
+GF,GUF,French Guiana,Americas,Latin America and the Caribbean,fr-GF,,,,,,
+PF,PYF,French Polynesia,Oceania,Polynesia,"fr-PF,ty",282465,2025,5814661209,2022,20739,2022
+TF,ATF,French Southern Territories,Africa,Sub-Saharan Africa,fr,,,,,,
+GA,GAB,Gabon,Africa,Sub-Saharan Africa,fr-GA,2593130,2025,20516134389,2023,8257,2023
+GM,GMB,Gambia,Africa,Sub-Saharan Africa,"en-GM,mnk,wof,wo,ff",2822093,2025,2339904157,2023,867,2023
+GE,GEO,Georgia,Asia,Western Asia,"ka,ru,hy,az",3935766,2025,30535530479,2023,8218,2023
+DE,DEU,Germany,Europe,Western Europe,de,83491249,2025,4456081016706,2023,53503,2023
+GH,GHA,Ghana,Africa,Sub-Saharan Africa,"en-GH,ak,ee,tw",35064272,2025,76370394412,2023,2260,2023
+GI,GIB,Gibraltar,Europe,Southern Europe,"en-GI,es,it,pt",40126,2025,,,,
+GR,GRC,Greece,Europe,Southern Europe,"el-GR,en,fr",10413962,2025,238206312633,2023,22888,2023
+GL,GRL,Greenland,Americas,Northern America,"kl,da-GL,en",56831,2025,3235809504,2021,57116,2021
+GD,GRD,Grenada,Americas,Latin America and the Caribbean,en-GD,117303,2025,1320334236,2023,11277,2023
+GP,GLP,Guadeloupe,Americas,Latin America and the Caribbean,fr-GP,,,,,,
+GU,GUM,Guam,Oceania,Micronesia,"en-GU,ch-GU",168999,2025,6910000000,2022,41833,2022
+GT,GTM,Guatemala,Americas,Latin America and the Caribbean,es-GT,18687881,2025,102050473864,2023,5630,2023
+GG,GGY,Guernsey,Europe,Northern Europe,"en,nrf",,,,,,
+GN,GIN,Guinea,Africa,Sub-Saharan Africa,fr-GN,15099727,2025,23612295818,2023,1639,2023
+GW,GNB,Guinea-Bissau,Africa,Sub-Saharan Africa,"pt-GW,pov",2249515,2025,1966461400,2023,913,2023
+GY,GUY,Guyana,Americas,Latin America and the Caribbean,en-GY,835986,2025,16786302158,2023,20314,2023
+HT,HTI,Haiti,Americas,Latin America and the Caribbean,"ht,fr-HT",11906095,2025,19850829758,2023,1706,2023
+HM,HMD,Heard & McDonald Islands,Oceania,Australia and New Zealand,,,,,,,
+VA,VAT,Vatican City,Europe,Southern Europe,"la,it,fr",,,,,,
+HN,HND,Honduras,Americas,Latin America and the Caribbean,"es-HN,cab,miq",11005850,2025,34400509852,2023,3232,2023
+HU,HUN,Hungary,Europe,Eastern Europe,hu-HU,9514251,2025,212388906459,2023,22142,2023
+IS,ISL,Iceland,Europe,Northern Europe,"is,en,de,da,sv,no",392404,2025,31020032583,2023,80433,2023
+IN,IND,India,Asia,Southern Asia,"en-IN,hi,bn,te,mr,ta,ur,gu,kn,ml,or,pa,as,bh,sat,ks,ne,sd,kok,doi,mni,sit,sa,fr,lus,inc",1463865525,2025,3549918918778,2023,2469,2023
+ID,IDN,Indonesia,Asia,South-eastern Asia,"id,en,nl,jv",285721236,2025,1371171152331,2023,4876,2023
+IR,IRN,Iran,Asia,Southern Asia,"fa-IR,ku",92417681,2025,401504514719,2023,4431,2023
+IQ,IRQ,Iraq,Asia,Western Asia,"ar-IQ,ku,hy",47020774,2025,250842782139,2023,5565,2023
+IE,IRL,Ireland,Europe,Northern Europe,"en-IE,ga-IE",5484367,2025,545629450404,2023,102725,2023
+IM,IMN,Isle of Man,Europe,Northern Europe,"en,gv",84118,2025,7931193222,2021,94300,2021
+IL,ISR,Israel,Asia,Western Asia,"he,ar-IL,en-IL,",10122800,2025,509901495702,2023,51772,2023
+IT,ITA,Italy,Europe,Southern Europe,"it-IT,de-IT,fr-IT,sc,ca,co,sl",58915656,2025,2254851212732,2023,38228,2023
+CI,CIV,Côte d’Ivoire,Africa,Sub-Saharan Africa,fr-CI,32711547,2025,78788828907,2023,2528,2023
+JM,JAM,Jamaica,Americas,Latin America and the Caribbean,en-JM,2837077,2025,19423355367,2023,6840,2023
+JP,JPN,Japan,Asia,Eastern Asia,ja,123366734,2025,4212945159781,2023,33834,2023
+JE,JEY,Jersey,Europe,Northern Europe,"en,fr,nrf",,,,,,
+JO,JOR,Jordan,Asia,Western Asia,"ar-JO,en",11520684,2025,50813642349,2023,4442,2023
+KZ,KAZ,Kazakhstan,Asia,Central Asia,"kk,ru",20843754,2025,261421121086,2023,12859,2023
+KE,KEN,Kenya,Africa,Sub-Saharan Africa,"en-KE,sw-KE",57532493,2025,107440575838,2023,1941,2023
+KI,KIR,Kiribati,Oceania,Micronesia,"en-KI,gil",136488,2025,279034355,2023,2105,2023
+KW,KWT,Kuwait,Asia,Western Asia,"ar-KW,en",4865298,2025,161772221951,2023,33332,2023
+KG,KGZ,Kyrgyzstan,Asia,Central Asia,"ky,uz,ru",7343064,2025,13987627909,2023,1970,2023
+LA,LAO,Laos,Asia,South-eastern Asia,"lo,fr,en",7873046,2025,15843155731,2023,2067,2023
+LV,LVA,Latvia,Europe,Northern Europe,"lv,ru,lt",1847785,2025,43627078481,2023,23160,2023
+LB,LBN,Lebanon,Asia,Western Asia,"ar-LB,fr-LB,en,hy",5849421,2025,20992421949,2022,3654,2022
+LS,LSO,Lesotho,Africa,Sub-Saharan Africa,"en-LS,st,zu,xh",2363325,2025,2046039024,2023,885,2023
+LR,LBR,Liberia,Africa,Sub-Saharan Africa,en-LR,5731206,2025,4332000000,2023,789,2023
+LY,LBY,Libya,Africa,Northern Africa,"ar-LY,it,en",7458555,2025,50491722446,2023,6911,2023
+LI,LIE,Liechtenstein,Europe,Western Europe,de-LI,41024,2025,7364654515,2022,186480,2022
+LT,LTU,Lithuania,Europe,Northern Europe,"lt,ru,pl",2888774,2025,77836396963,2023,27106,2023
+LU,LUX,Luxembourg,Europe,Western Europe,"lb,de-LU,fr-LU",686970,2025,85755006124,2023,128678,2023
+MG,MDG,Madagascar,Africa,Sub-Saharan Africa,"fr-MG,mg",32740678,2025,16031702915,2023,514,2023
+MW,MWI,Malawi,Africa,Sub-Saharan Africa,"ny,yao,tum,swk",22216120,2025,14084341062,2023,667,2023
+MY,MYS,Malaysia,Asia,South-eastern Asia,"ms-MY,en,zh,ta,te,ml,pa,th",35977838,2025,399648828547,2023,11377,2023
+MV,MDV,Maldives,Asia,Southern Asia,"dv,en",529676,2025,6600000000,2023,12548,2023
+ML,MLI,Mali,Africa,Sub-Saharan Africa,"fr-ML,bm",25198821,2025,20904898296,2023,879,2023
+MT,MLT,Malta,Europe,Southern Europe,"mt,en-MT",579704,2025,20956999452,2023,37914,2023
+MH,MHL,Marshall Islands,Oceania,Micronesia,"mh,en-MH",36282,2025,284000000,2023,7314,2023
+MQ,MTQ,Martinique,Americas,Latin America and the Caribbean,fr-MQ,,,,,,
+MR,MRT,Mauritania,Africa,Sub-Saharan Africa,"ar-MR,fuc,snk,fr,mey,wo",5315065,2025,10452577063,2023,2081,2023
+MU,MUS,Mauritius,Africa,Sub-Saharan Africa,"en-MU,bho,fr",1243741,2025,14397127281,2023,11530,2023
+YT,MYT,Mayotte,Africa,Sub-Saharan Africa,fr-YT,,,,,,
+MX,MEX,Mexico,Americas,Latin America and the Caribbean,es-MX,131946900,2025,1788886821047,2023,13788,2023
+FM,FSM,Micronesia,Oceania,Micronesia,"en-FM,chk,pon,yap,kos,uli,woe,nkr,kpg",113683,2025,460000000,2023,4084,2023
+MC,MCO,Monaco,Europe,Western Europe,"fr-MC,en,it",38341,2025,8784002932,2022,225630,2022
+MN,MNG,Mongolia,Asia,Eastern Asia,"mn,ru",3568978,2025,19872180370,2023,5709,2023
+ME,MNE,Montenegro,Europe,Southern Europe,"sr,hu,bs,sq,hr,rom",623129,2025,7404541965,2023,11875,2023
+MS,MSR,Montserrat,Americas,Latin America and the Caribbean,en-MS,,,,,,
+MA,MAR,Morocco,Africa,Northern Africa,"ar-MA,ber,fr",38430770,2025,141109373209,2023,3742,2023
+MZ,MOZ,Mozambique,Africa,Sub-Saharan Africa,"pt-MZ,vmw",35631653,2025,20624597847,2023,613,2023
+MM,MMR,Myanmar,Asia,South-eastern Asia,my,54850648,2025,64815031669,2023,1197,2023
+NA,NAM,Namibia,Africa,Sub-Saharan Africa,"en-NA,af,de,hz,naq",3092816,2025,12351024844,2023,4168,2023
+NR,NRU,Nauru,Oceania,Micronesia,"na,en-NR",12025,2025,154127798,2023,12979,2023
+NP,NPL,Nepal,Asia,Southern Asia,"ne,en",29618118,2025,40908073367,2023,1378,2023
+NL,NLD,Netherlands,Europe,Western Europe,"nl-NL,fy-NL",18087633,2025,1118124749886,2023,62545,2023
+NC,NCL,New Caledonia,Oceania,Melanesia,fr-NC,295333,2025,9623318718,2022,33516,2022
+NZ,NZL,New Zealand,Oceania,Australia and New Zealand,"en-NZ,mi",5324700,2025,253465703232,2023,48743,2023
+NI,NIC,Nicaragua,Americas,Latin America and the Caribbean,"es-NI,en",7007502,2025,17829215284,2023,2613,2023
+NE,NER,Niger,Africa,Sub-Saharan Africa,"fr-NE,ha,kr,dje",27917831,2025,16819170421,2023,643,2023
+NG,NGA,Nigeria,Africa,Sub-Saharan Africa,"en-NG,ha,yo,ig,ff",237527782,2025,362814951696,2023,1592,2023
+NU,NIU,Niue,Oceania,Polynesia,"niu,en-NU",,,,,,
+NF,NFK,Norfolk Island,Oceania,Australia and New Zealand,en-NF,,,,,,
+MP,MNP,Northern Mariana Islands,Oceania,Micronesia,"fil,tl,zh,ch-MP,en-MP",43541,2025,858000000,2020,18053,2020
+MK,MKD,North Macedonia,Europe,Southern Europe,"mk,sq,tr,rmm,sr",1820909,2025,14761237042,2023,8076,2023
+NO,NOR,Norway,Europe,Northern Europe,"no,nb,nn,se,fi",5610870,2025,485513316504,2023,87962,2023
+OM,OMN,Oman,Asia,Western Asia,"ar-OM,en,bal,ur",5494691,2025,108192457737,2023,21427,2023
+PK,PAK,Pakistan,Asia,Southern Asia,"ur-PK,en-PK,pa,sd,ps,brh",255219554,2025,338368455318,2023,1367,2023
+PW,PLW,Palau,Oceania,Micronesia,"pau,sov,en-PW,tox,ja,fil,zh",17663,2025,263020734,2023,14837,2023
+PA,PAN,Panama,Americas,Latin America and the Caribbean,"es-PA,en",4571189,2025,83382400000,2023,18701,2023
+PG,PNG,Papua New Guinea,Oceania,Melanesia,"en-PG,ho,meu,tpi",10762817,2025,30932496250,2023,2977,2023
+PY,PRY,Paraguay,Americas,Latin America and the Caribbean,"es-PY,gn",7013078,2025,42956263544,2023,6276,2023
+PE,PER,Peru,Americas,Latin America and the Caribbean,"es-PE,qu,ay",34576665,2025,267603248655,2023,7907,2023
+PH,PHL,Philippines,Asia,South-eastern Asia,"tl,en-PH,fil,ceb,ilo,hil,war,pam,bik,bcl,pag,mrw,tsg,mdh,cbk,krj,sgd,msb,akl,ibg,yka,mta,abx",116786962,2025,437146372730,2023,3805,2023
+PN,PCN,Pitcairn,Oceania,Polynesia,en-PN,,,,,,
+PL,POL,Poland,Europe,Eastern Europe,pl,36435861,2025,811229100688,2023,22112,2023
+PT,PRT,Portugal,Europe,Southern Europe,"pt-PT,mwl",10804871,2025,287080013574,2023,27139,2023
+PR,PRI,Puerto Rico,Americas,Latin America and the Caribbean,"en-PR,es-PR",3184835,2025,117902300000,2023,36801,2023
+QA,QAT,Qatar,Asia,Western Asia,"ar-QA,es",2972215,2025,235770403735,2022,88724,2022
+KR,KOR,South Korea,Asia,Eastern Asia,"ko-KR,en",51684564,2025,1712792854202,2023,33121,2023
+MD,MDA,Moldova,Europe,Eastern Europe,"ro,ru,gag,tr",2360527,2025,16539436547,2023,6729,2023
+RE,REU,Réunion,Africa,Sub-Saharan Africa,fr-RE,,,,,,
+RO,ROU,Romania,Europe,Eastern Europe,"ro,hu,rom",19020271,2025,351002579630,2023,18415,2023
+RU,RUS,Russia,Europe,Eastern Europe,"ru,tt,xal,cau,ady,kv,ce,tyv,cv,udm,tut,mns,bua,myv,mdf,chm,ba,inh,kbd,krc,av,sah,nog",143513328,2025,2021421476035,2023,14055,2023
+RW,RWA,Rwanda,Africa,Sub-Saharan Africa,"rw,en-RW,fr-RW,sw",14569341,2025,14097768648,2023,1010,2023
+BL,BLM,St. Barthélemy,Americas,Latin America and the Caribbean,fr,,,,,,
+SH,SHN,St. Helena,Africa,Sub-Saharan Africa,en-SH,,,,,,
+KN,KNA,St. Kitts & Nevis,Americas,Latin America and the Caribbean,en-KN,46922,2025,1077033111,2023,23034,2023
+LC,LCA,St. Lucia,Americas,Latin America and the Caribbean,en-LC,180149,2025,2519925939,2023,14055,2023
+MF,MAF,St. Martin,Americas,Latin America and the Caribbean,fr,24941,2025,649206263,2021,21668,2021
+PM,SPM,St. Pierre & Miquelon,Americas,Northern America,fr-PM,,,,,,
+VC,VCT,St. Vincent & Grenadines,Americas,Latin America and the Caribbean,"en-VC,fr",99924,2025,1065962963,2023,10520,2023
+WS,WSM,Samoa,Oceania,Polynesia,"sm,en-WS",219306,2025,934100336,2023,4311,2023
+SM,SMR,San Marino,Europe,Southern Europe,it-SM,34109,2025,1855382833,2021,54169,2021
+ST,STP,São Tomé & Príncipe,Africa,Sub-Saharan Africa,pt-ST,240254,2025,603240749,2023,2613,2023
+SA,SAU,Saudi Arabia,Asia,Western Asia,ar-SA,36973555,2025,1067582933333,2023,31676,2023
+SN,SEN,Senegal,Africa,Sub-Saharan Africa,"fr-SN,wo,fuc,mnk",18931966,2025,31013986429,2023,1716,2023
+RS,SRB,Serbia,Europe,Southern Europe,"sr,hu,bs,rom",6549143,2025,75187125427,2023,11352,2023
+SC,SYC,Seychelles,Africa,Sub-Saharan Africa,"en-SC,fr-SC",122730,2025,2141450171,2023,17879,2023
+SL,SLE,Sierra Leone,Africa,Sub-Saharan Africa,"en-SL,men,tem",8819794,2025,3809832237,2023,450,2023
+SG,SGP,Singapore,Asia,South-eastern Asia,"cmn,en-SG,ms-SG,ta-SG,zh-SG",6111175,2025,501427500080,2023,84734,2023
+SX,SXM,Sint Maarten,Americas,Latin America and the Caribbean,"nl,en",43923,2025,1623165683,2023,37970,2023
+SK,SVK,Slovakia,Europe,Eastern Europe,"sk,hu",5413813,2025,132793622283,2023,24470,2023
+SI,SVN,Slovenia,Europe,Southern Europe,"sl,sh",2130986,2025,68216781411,2023,32171,2023
+SB,SLB,Solomon Islands,Oceania,Melanesia,"en-SB,tpi",838645,2025,1631286701,2023,2039,2023
+SO,SOM,Somalia,Africa,Sub-Saharan Africa,"so-SO,ar-SO,it,en-SO",19654739,2025,11679800110,2023,636,2023
+ZA,ZAF,South Africa,Africa,Sub-Saharan Africa,"zu,xh,af,nso,en-ZA,tn,st,ts,ss,ve,nr",64747319,2025,377781600986,2023,5976,2023
+GS,SGS,South Georgia & South Sandwich Islands,Americas,Latin America and the Caribbean,en,,,,,,
+SS,SSD,South Sudan,Africa,Sub-Saharan Africa,en,12188788,2025,11997800760,2015,1080,2015
+ES,ESP,Spain,Europe,Southern Europe,"es-ES,ca,gl,eu,oc",49355143,2025,1580694712516,2023,32691,2023
+LK,LKA,Sri Lanka,Asia,Southern Asia,"si,ta,en",21756000,2025,84356860421,2023,3828,2023
+PS,PSE,Palestine,Asia,Western Asia,ar-PS,5413596,2025,17396300000,2023,3368,2023
+SD,SDN,Sudan,Africa,Northern Africa,"ar-SD,en,fia",51662147,2025,109327023589,2023,2185,2023
+SR,SUR,Suriname,Americas,Latin America and the Caribbean,"nl-SR,en,srn,hns,jv",639850,2025,3782437296,2023,6015,2023
+SJ,SJM,Svalbard & Jan Mayen,Europe,Northern Europe,"no,ru",,,,,,
+SE,SWE,Sweden,Europe,Northern Europe,"sv-SE,se,sma,fi-SE",10596620,2025,593267701033,2023,56305,2023
+CH,CHE,Switzerland,Europe,Western Europe,"de-CH,fr-CH,it-CH,rm",9092436,2025,884940402230,2023,99557,2023
+SY,SYR,Syria,Asia,Western Asia,"ar-SY,ku,hy,arc,fr,en",25620427,2025,8980060819,2021,415,2021
+TW,TWN,Taiwan,Asia,Eastern Asia,"zh-TW,zh,nan,hak",,,,,,
+TJ,TJK,Tajikistan,Asia,Central Asia,"tg,ru",10786734,2025,12060602009,2023,1161,2023
+TH,THA,Thailand,Asia,South-eastern Asia,"th,en",71619863,2025,514944993834,2023,7182,2023
+TL,TLS,Timor-Leste,Asia,South-eastern Asia,"tet,pt-TL,id,en",1418517,2025,2243142908,2023,1620,2023
+TG,TGO,Togo,Africa,Sub-Saharan Africa,"fr-TG,ee,hna,kbp,dag,ha",8591626,2025,9171261835,2023,1115,2023
+TK,TKL,Tokelau,Oceania,Polynesia,"tkl,en-TK",,,,,,
+TO,TON,Tonga,Oceania,Polynesia,"to,en-TO",103742,2025,500274898,2022,4763,2022
+TT,TTO,Trinidad & Tobago,Americas,Latin America and the Caribbean,"en-TT,hns,fr,es,zh",1367764,2025,28139944790,2023,20578,2023
+TN,TUN,Tunisia,Africa,Northern Africa,"ar-TN,fr",12348573,2025,48529595417,2023,3978,2023
+TR,TUR,Türkiye,Asia,Western Asia,"tr-TR,ku,diq,az,av",85878556,2025,1108022373260,2023,12986,2023
+TM,TKM,Turkmenistan,Asia,Central Asia,"tk,ru,uz",7618847,2025,59887334844,2023,8132,2023
+TC,TCA,Turks & Caicos Islands,Americas,Latin America and the Caribbean,en-TC,46855,2025,1402054391,2023,30349,2023
+TV,TUV,Tuvalu,Oceania,Polynesia,"tvl,en,sm,gil",9492,2025,62280312,2023,6345,2023
+UG,UGA,Uganda,Africa,Sub-Saharan Africa,"en-UG,lg,sw,ar",51384894,2025,49272882214,2023,1013,2023
+UA,UKR,Ukraine,Europe,Eastern Europe,"uk,ru-UA,rom,pl,hu",38980376,2025,178757021387,2023,4737,2023
+AE,ARE,United Arab Emirates,Asia,Western Asia,"ar-AE,fa,en,hi,ur",11513149,2025,504173451327,2023,48091,2023
+GB,GBR,UK,Europe,Northern Europe,"en-GB,cy-GB,gd",69487000,2025,3340032380668,2023,48741,2023
+TZ,TZA,Tanzania,Africa,Sub-Saharan Africa,"sw-TZ,en,ar",70545865,2025,79158286334,2023,1188,2023
+UM,UMI,U.S. Outlying Islands,Oceania,Micronesia,en-UM,,,,,,
+US,USA,US,Americas,Northern America,"en-US,es-US,haw,fr",341784857,2025,27360935000000,2023,81249,2023
+VI,VIR,U.S. Virgin Islands,Americas,Latin America and the Caribbean,en-VI,103792,2025,4444000000,2021,41976,2021
+UY,URY,Uruguay,Americas,Latin America and the Caribbean,es-UY,3384688,2025,77240831587,2023,22798,2023
+UZ,UZB,Uzbekistan,Asia,Central Asia,"uz,ru,tg",37053428,2025,90889149307,2023,2549,2023
+VU,VUT,Vanuatu,Oceania,Melanesia,"bi,en-VU,fr-VU",335169,2025,1126313359,2023,3515,2023
+VE,VEN,Venezuela,Americas,Latin America and the Caribbean,es-VE,28516896,2025,482359318768,2014,15944,2014
+VN,VNM,Vietnam,Asia,South-eastern Asia,"vi,en,fr,zh,km",101598527,2025,429716969050,2023,4282,2023
+WF,WLF,Wallis & Futuna,Oceania,Polynesia,"wls,fud,fr-WF",,,,,,
+EH,ESH,Western Sahara,Africa,Northern Africa,"ar,mey",,,,,,
+YE,YEM,Yemen,Asia,Western Asia,ar-YE,41773878,2025,21606160663,2018,634,2018
+ZM,ZMB,Zambia,Africa,Sub-Saharan Africa,"en-ZM,bem,loz,lun,lue,ny,toi",21913874,2025,28162630954,2023,1359,2023
+ZW,ZWE,Zimbabwe,Africa,Sub-Saharan Africa,"en-ZW,sn,nr,nd",16950795,2025,26538273499,2023,1624,2023

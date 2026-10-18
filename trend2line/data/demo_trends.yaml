@@ -1,0 +1,117 @@
+# Example trends from different regions and categories. Each suggested_as_of is at least 90 days after the
+# market's Wikipedia article has pageviews (otherwise there is no curve to read). Used for the UI picker, offline tests, and as canned
+# Gemini output when MOCK_LLM=1. In live mode Gemini produces the product spec for ANY trend typed in.
+trends:
+  - trend: Dubai chocolate
+    origin: United Arab Emirates
+    suggested_as_of: 2025-04-15   # en article starts 2024-11-29
+    suggested_market: GCC
+    spec:
+      product_name: Milk chocolate bar with pistachio cream and toasted kataifi
+      category: confectionery
+      format: shell_and_fill
+      hero_ingredient: pistachio
+      ingredients:
+        - {name: milk chocolate, role: shell, components: [cocoa butter, sugar, milk powder]}
+        - {name: pistachio paste, role: filling, components: []}
+        - {name: sugar, role: filling, components: []}
+        - {name: vegetable fat, role: filling, components: []}
+        - {name: milk powder, role: filling, components: []}
+        - {name: kataifi, role: inclusion, components: [wheat flour, water]}
+        - {name: butter, role: inclusion, components: []}
+        - {name: tahini, role: filling, components: []}
+      process_steps: [tempering, shell_moulding, toasting, filling_deposit, backing_off, cooling, demoulding, wrapping]
+  - trend: Dalgona coffee
+    origin: South Korea
+    suggested_as_of: 2020-07-01   # en article starts 2020-04-01; 90 days of history needed
+    suggested_market: IN
+    spec:
+      product_name: Ready-to-drink whipped coffee with milk
+      category: dairy_beverage
+      format: beverage
+      hero_ingredient: instant coffee
+      ingredients:
+        - {name: instant coffee, role: base, components: []}
+        - {name: sugar, role: base, components: []}
+        - {name: milk, role: base, components: []}
+      process_steps: [mixing, pasteurisation, homogenisation, liquid_filling]
+  - trend: Croffle
+    origin: South Korea
+    suggested_as_of: 2022-04-01   # ko article starts 2021-11-13
+    suggested_market: KR
+    spec:
+      product_name: Croissant-dough waffle with caramelised sugar
+      category: bakery
+      format: bakery
+      hero_ingredient: croissant
+      ingredients:
+        - {name: wheat flour, role: base, components: []}
+        - {name: butter, role: base, components: []}
+        - {name: sugar, role: topping, components: []}
+        - {name: egg, role: base, components: []}
+        - {name: yeast, role: base, components: []}
+      process_steps: [dough_mixing, sheeting_laminating, proofing, baking, cooling, wrapping]
+  - trend: Tanghulu
+    origin: China
+    suggested_as_of: 2023-08-01
+    suggested_market: KR
+    spec:
+      product_name: Candied fruit skewers with a hard sugar shell
+      category: confectionery
+      format: other
+      hero_ingredient: strawberry
+      ingredients:
+        - {name: strawberry, role: base, components: []}
+        - {name: sugar, role: coating, components: []}
+        - {name: water, role: coating, components: []}
+      process_steps: [cooking_kettle, cooling, tray_sealing]
+  - trend: Korean corn dog
+    origin: South Korea
+    suggested_as_of: 2022-06-01
+    suggested_market: US
+    spec:
+      product_name: Battered and fried sausage and mozzarella stick
+      category: snacks
+      format: other
+      hero_ingredient: mozzarella
+      ingredients:
+        - {name: sausage, role: base, components: [pork, salt]}
+        - {name: mozzarella, role: filling, components: []}
+        - {name: wheat flour, role: coating, components: []}
+        - {name: egg, role: coating, components: []}
+        - {name: milk, role: coating, components: []}
+        - {name: breadcrumbs, role: coating, components: [wheat flour]}
+        - {name: sugar, role: topping, components: []}
+      process_steps: [battering, frying, freezing, tray_sealing]
+  - trend: Maritozzo
+    origin: Italy
+    suggested_as_of: 2021-09-01   # ja article starts 2021-04-28
+    suggested_market: JP
+    spec:
+      product_name: Sweet brioche bun filled with whipped cream
+      category: bakery
+      format: bakery
+      hero_ingredient: cream
+      ingredients:
+        - {name: wheat flour, role: base, components: []}
+        - {name: egg, role: base, components: []}
+        - {name: butter, role: base, components: []}
+        - {name: whipping cream, role: filling, components: []}
+        - {name: orange zest, role: base, components: []}
+        - {name: sugar, role: base, components: []}
+      process_steps: [dough_mixing, proofing, baking, cooling, filling_deposit, tray_sealing]
+  - trend: Ube
+    origin: Philippines
+    suggested_as_of: 2022-03-01
+    suggested_market: US
+    spec:
+      product_name: Purple yam (ube) ice cream
+      category: frozen
+      format: other
+      hero_ingredient: yam
+      ingredients:
+        - {name: ube halaya, role: base, components: [yam, sweetened condensed milk, butter]}
+        - {name: cream, role: base, components: []}
+        - {name: milk, role: base, components: []}
+        - {name: sugar, role: base, components: []}
+      process_steps: [mixing, pasteurisation, homogenisation, ice_cream_freezing, cup_filling]

@@ -1,0 +1,25 @@
+name,maps_to,note,source
+kataifi,en:phyllo-dough|en:wheat-flour,Shredded wheat-flour pastry used in kunafa and Dubai-style chocolate,curator: common culinary definition; review
+kadayif,en:phyllo-dough|en:wheat-flour,Turkish name for kataifi,curator: common culinary definition; review
+kunafa,en:phyllo-dough|en:wheat-flour|en:clarified-butter|en:cheese,Levantine pastry: shredded wheat dough with ghee and cheese,curator: common culinary definition; review
+knafeh,en:phyllo-dough|en:wheat-flour|en:clarified-butter|en:cheese,Spelling variant of kunafa,curator: common culinary definition; review
+phyllo,en:phyllo-dough|en:wheat-flour,Filo pastry is wheat-flour dough; OFF node has no allergen tag,curator: common culinary definition; review
+phyllo dough,en:phyllo-dough|en:wheat-flour,Filo pastry is wheat-flour dough; OFF node has no allergen tag,curator: common culinary definition; review
+filo pastry,en:phyllo-dough|en:wheat-flour,Filo pastry is wheat-flour dough; OFF node has no allergen tag,curator: common culinary definition; review
+mochi,en:glutinous-rice,Japanese rice cake made from glutinous rice,curator: common culinary definition; review
+tteok,en:glutinous-rice|en:rice,Korean rice cake,curator: common culinary definition; review
+gochujang,en:korean-chili-powder|en:glutinous-rice|en:soya-bean|en:wheat,Korean fermented chili paste; many recipes include wheat and soybean,curator: common recipe; check supplier spec
+pandan,en:plant,Pandan leaf (Pandanus amaryllifolius) flavouring; no listed allergen,curator: common culinary definition; review
+pandan leaves,en:plant,Pandan leaf flavouring; no listed allergen,curator: common culinary definition; review
+ube,en:yam,Purple yam (Dioscorea alata); avoids a false match with an Igbo word for pear,curator: common culinary definition; review
+ube halaya,en:yam|en:sweetened-condensed-milk|en:butter,Filipino purple yam jam usually made with condensed milk and butter,curator: common recipe; check supplier spec
+khoa,en:milk-powder,Indian reduced milk solids (khoya/mawa),curator: common culinary definition; review
+khoya,en:milk-powder,Indian reduced milk solids,curator: common culinary definition; review
+mawa,en:milk-powder,Indian reduced milk solids,curator: common culinary definition; review
+akkawi,en:cheese,Levantine white brined cheese,curator: common culinary definition; review
+biscoff,en:speculoos|en:wheat-flour,Caramelised spiced biscuit (brand name); wheat based,curator: common recipe; check supplier spec
+lotus biscoff,en:speculoos|en:wheat-flour,Caramelised spiced biscuit (brand name); wheat based,curator: common recipe; check supplier spec
+croissant,en:wheat-flour|en:butter,Laminated wheat dough with butter,curator: common recipe; check supplier spec
+boba,en:tapioca,Tapioca pearls,curator: common culinary definition; review
+tapioca pearls,en:tapioca,Tapioca pearls,curator: common culinary definition; review
+saffron,en:spice,Saffron spice; no listed allergen,curator: common culinary definition; review

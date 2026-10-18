@@ -1,0 +1,45 @@
+# Every external dataset Trend2Line downloads. `python -m scripts.refresh_data` fetches them all,
+# records size, sha256 and fetch time in data/manifest.json, and rebuilds the derived tables.
+# Nothing in app/ hard-codes these URLs; change a source here and re-run the refresh.
+sources:
+  - id: off_ingredients_taxonomy
+    url: https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/taxonomies/food/ingredients.txt
+    file: sources/off_ingredients.txt
+    publisher: Open Food Facts
+    licence: ODbL 1.0
+    used_for: Multilingual ingredient names, parent links (pistachio paste -> pistachio -> tree nut) and allergen tags.
+
+  - id: off_allergens_taxonomy
+    url: https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/taxonomies/allergens.txt
+    file: sources/off_allergens.txt
+    publisher: Open Food Facts
+    licence: ODbL 1.0
+    used_for: Canonical allergen IDs and their synonyms in many languages.
+
+  - id: wb_population
+    url: https://raw.githubusercontent.com/datasets/population/main/data/population.csv
+    file: sources/wb_population.csv
+    publisher: World Bank (SP.POP.TOTL), mirrored by datasets.io
+    licence: CC BY 4.0
+    used_for: Market size in the market scan.
+
+  - id: wb_gdp
+    url: https://raw.githubusercontent.com/datasets/gdp/main/data/gdp.csv
+    file: sources/wb_gdp.csv
+    publisher: World Bank (NY.GDP.MKTP.CD), mirrored by datasets.io
+    licence: CC BY 4.0
+    used_for: GDP per capita (GDP / population) in the market scan.
+
+  - id: country_codes
+    url: https://raw.githubusercontent.com/datasets/country-codes/main/data/country-codes.csv
+    file: sources/country_codes.csv
+    publisher: datasets.io (ISO 3166, UN M49, CLDR)
+    licence: ODC-PDDL
+    used_for: ISO codes, region names and spoken languages (which Wikipedia editions to read per market).
+
+  - id: world_cities
+    url: https://raw.githubusercontent.com/datasets/world-cities/main/data/world-cities.csv
+    file: sources/world_cities.csv
+    publisher: GeoNames (cities over 15,000 people), mirrored by datasets.io
+    licence: CC BY 4.0
+    used_for: Detecting place names in product names (origin-claim check).

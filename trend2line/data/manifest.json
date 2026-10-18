@@ -1,0 +1,88 @@
+{
+  "sources": [
+    {
+      "id": "off_ingredients_taxonomy",
+      "url": "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/taxonomies/food/ingredients.txt",
+      "file": "sources/off_ingredients.txt",
+      "publisher": "Open Food Facts",
+      "licence": "ODbL 1.0",
+      "used_for": "Multilingual ingredient names, parent links (pistachio paste -> pistachio -> tree nut) and allergen tags.",
+      "fetched_at": "2026-10-15T17:41:07+00:00",
+      "bytes": 3074204,
+      "sha256": "694209954c3e73df714e73efb7ec3a2d07cbe563916db73c35ccaa14b2cffda9",
+      "status": "ok"
+    },
+    {
+      "id": "off_allergens_taxonomy",
+      "url": "https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/taxonomies/allergens.txt",
+      "file": "sources/off_allergens.txt",
+      "publisher": "Open Food Facts",
+      "licence": "ODbL 1.0",
+      "used_for": "Canonical allergen IDs and their synonyms in many languages.",
+      "fetched_at": "2026-10-15T17:41:08+00:00",
+      "bytes": 75235,
+      "sha256": "c198d3b405f9c83ea86d9b5f75466f67c290ed371171266f999fd8c9b0eec73e",
+      "status": "ok"
+    },
+    {
+      "id": "wb_population",
+      "url": "https://raw.githubusercontent.com/datasets/population/main/data/population.csv",
+      "file": "sources/wb_population.csv",
+      "publisher": "World Bank (SP.POP.TOTL), mirrored by datasets.io",
+      "licence": "CC BY 4.0",
+      "used_for": "Market size in the market scan.",
+      "fetched_at": "2026-10-15T17:41:08+00:00",
+      "bytes": 556718,
+      "sha256": "2c697c3e668c8cb06ee467cd0d475b37b52844fdc48cb7725b79b58f18bf0b02",
+      "status": "ok"
+    },
+    {
+      "id": "wb_gdp",
+      "url": "https://raw.githubusercontent.com/datasets/gdp/main/data/gdp.csv",
+      "file": "sources/wb_gdp.csv",
+      "publisher": "World Bank (NY.GDP.MKTP.CD), mirrored by datasets.io",
+      "licence": "CC BY 4.0",
+      "used_for": "GDP per capita (GDP / population) in the market scan.",
+      "fetched_at": "2026-10-15T17:41:08+00:00",
+      "bytes": 562767,
+      "sha256": "8d84ef6bcaccf740c01c5ed7566aae8f7b149d0e2c20001e441efd3cb5b2fa86",
+      "status": "ok"
+    },
+    {
+      "id": "country_codes",
+      "url": "https://raw.githubusercontent.com/datasets/country-codes/main/data/country-codes.csv",
+      "file": "sources/country_codes.csv",
+      "publisher": "datasets.io (ISO 3166, UN M49, CLDR)",
+      "licence": "ODC-PDDL",
+      "used_for": "ISO codes, region names and spoken languages (which Wikipedia editions to read per market).",
+      "fetched_at": "2026-10-15T17:41:08+00:00",
+      "bytes": 133966,
+      "sha256": "07918cb63dd8bc43e52110def00d490998634360605e9d8c602865e2260802fd",
+      "status": "ok"
+    },
+    {
+      "id": "world_cities",
+      "url": "https://raw.githubusercontent.com/datasets/world-cities/main/data/world-cities.csv",
+      "file": "sources/world_cities.csv",
+      "publisher": "GeoNames (cities over 15,000 people), mirrored by datasets.io",
+      "licence": "CC BY 4.0",
+      "used_for": "Detecting place names in product names (origin-claim check).",
+      "fetched_at": "2026-10-15T17:41:08+00:00",
+      "bytes": 1335139,
+      "sha256": "2dd022b636b2edf3226e4d52065d9f2f10c1373e1865f50e91518510a2ead9a3",
+      "status": "ok"
+    }
+  ],
+  "derived": {
+    "market_indicators": {
+      "file": "derived/market_indicators.csv",
+      "rows": 249,
+      "built_from": [
+        "wb_population",
+        "wb_gdp",
+        "country_codes"
+      ]
+    }
+  },
+  "refreshed_at": "2026-10-15T17:41:08+00:00"
+}

@@ -1,0 +1,34 @@
+process_step,required_any,category,description
+tempering,tempering,confectionery,Temper chocolate
+solid_moulding,solid_moulding,confectionery,Deposit solid chocolate into moulds
+shell_moulding,shell_moulding|one_shot_depositing,confectionery,Form a hollow chocolate shell
+filling_deposit,one_shot_depositing|filling_depositing,confectionery,Deposit a soft filling
+backing_off,shell_moulding|one_shot_depositing,confectionery,Close the shell
+enrobing,enrobing,confectionery,Coat a centre with chocolate
+panning,panning_drum,confectionery,Coat centres in a rotating pan
+toasting,toasting,shared,"Toast an inclusion (kataifi, coconut, nuts)"
+roasting,roaster,shared,Roast nuts or seeds
+demoulding,solid_moulding|shell_moulding|one_shot_depositing,confectionery,Release from moulds
+cooling,cooling_tunnel,shared,Cool and set
+dough_mixing,dough_mixer,bakery,Mix dough or batter
+sheeting_laminating,laminator,bakery,Sheet and laminate dough with butter
+proofing,proofer,bakery,Proof yeasted dough
+baking,oven,bakery,Bake
+frying,fryer,snacks,Deep fry
+battering,batter_applicator,snacks,Apply batter or breading
+extrusion,extruder,snacks,Extrude and expand
+seasoning,seasoning_drum,snacks,Tumble with seasoning
+steaming,steamer,shared,Steam cook
+cooking_kettle,cooking_kettle,shared,"Cook sauces, caramels, jams or pearls in a kettle"
+mixing,high_shear_mixing,shared,High-shear mixing of liquids or creams
+powder_blending,ribbon_blender,dairy_beverage,Blend dry powders
+pasteurisation,pasteuriser,dairy_beverage,Heat-treat liquids
+homogenisation,homogeniser,dairy_beverage,Homogenise liquids
+carbonation,carbonator,dairy_beverage,Carbonate drinks
+liquid_filling,liquid_filler,dairy_beverage,Fill bottles or cans
+cup_filling,cup_filler_sealer,dairy_beverage,Fill and seal cups
+freezing,blast_freezer,frozen,Blast-freeze product
+ice_cream_freezing,continuous_freezer,frozen,Continuous ice-cream freezing
+cutting,ultrasonic_cutter|guillotine,shared,Cut or portion
+wrapping,flow_wrap|vffs,shared,Flow-wrap or bag
+tray_sealing,tray_sealer,shared,Seal into trays

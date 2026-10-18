@@ -1,0 +1,96 @@
+# SYNTHETIC DEMO COMPANY. Hanbit Foods is fictional: no real company, plant or product is described.
+# It is modelled on a typical Korean bakery-café and confectionery manufacturer (franchise bakery supply,
+# convenience-store desserts, candy and frozen snacks) so the demo has a realistic portfolio in a market that
+# is read from its own-language (Korean) Wikipedia. Lines and SKUs are invented but plausible; ingredients
+# resolve through the real Open Food Facts taxonomy like any uploaded plant file.
+company: "Hanbit Foods Co., Ltd."
+provenance: demo_company_input
+note: "Synthetic demo company · Icheon, Gyeonggi-do · bakery, candy, desserts and frozen snacks"
+hq: "Icheon, Gyeonggi-do, South Korea"
+home_market: KR
+base_label_languages: [ko, en]
+
+lines:
+  HB-B1:
+    name: Laminated bakery line B1 (croissant, pastry)
+    category: bakery
+    capabilities: [dough_mixer, laminator, proofer, oven, cooling_tunnel, flow_wrap, tray_sealer]
+    rate_kg_h: 700
+  HB-B2:
+    name: Waffle and cake line B2
+    category: bakery
+    capabilities: [dough_mixer, oven, cooling_tunnel, ultrasonic_cutter, flow_wrap]
+    rate_kg_h: 500
+  HB-C1:
+    name: Candy and fruit-coating line C1
+    category: confectionery
+    capabilities: [cooking_kettle, cooling_tunnel, tray_sealer, flow_wrap]
+    rate_kg_h: 350
+  HB-C2:
+    name: Chocolate moulding line C2
+    category: confectionery
+    capabilities: [tempering, solid_moulding, shell_moulding, cooling_tunnel, flow_wrap]
+    rate_kg_h: 300
+  HB-F1:
+    name: Frozen snacks line F1 (hotteok, corn dog)
+    category: snacks
+    capabilities: [dough_mixer, batter_applicator, fryer, blast_freezer, tray_sealer]
+    rate_kg_h: 800
+
+skus:
+  HB-CROISSANT-70:
+    name: Hanbit Butter Croissant 70 g
+    line: HB-B1
+    format: bakery
+    ingredients: [wheat flour, butter, egg, sugar, yeast, salt]
+    process_steps: [dough_mixing, sheeting_laminating, proofing, baking, cooling, wrapping]
+    free_from: []
+  HB-SOBORO-90:
+    name: Soboro Peanut Streusel Bun 90 g
+    line: HB-B1
+    format: bakery
+    ingredients: [wheat flour, peanut, butter, egg, sugar, yeast]
+    process_steps: [dough_mixing, proofing, baking, cooling, wrapping]
+    free_from: []
+  HB-CASTELLA-120:
+    name: Honey Castella 120 g
+    line: HB-B2
+    format: bakery
+    ingredients: [egg, wheat flour, sugar, honey]
+    process_steps: [dough_mixing, baking, cooling, cutting, wrapping]
+    free_from: [nut_free]
+  HB-WAFFLE-60:
+    name: Belgian Sugar Waffle 60 g
+    line: HB-B2
+    format: bakery
+    ingredients: [wheat flour, butter, egg, sugar, yeast]
+    process_steps: [dough_mixing, baking, cooling, wrapping]
+    free_from: [nut_free]
+  HB-YAKGWA-150:
+    name: Honey Yakgwa Cookies 150 g
+    line: HB-C1
+    format: other
+    ingredients: [wheat flour, honey, sesame oil, ginger]
+    process_steps: [dough_mixing, frying, cooking_kettle, cooling, tray_sealing]
+    free_from: [dairy_free, egg_free]
+  HB-HOBAKYEOT-80:
+    name: Pumpkin Yeot Hard Candy 80 g
+    line: HB-C1
+    format: other
+    ingredients: [sugar, glucose syrup, pumpkin]
+    process_steps: [cooking_kettle, cooling, wrapping]
+    free_from: [gluten_free, dairy_free, egg_free]
+  HB-MILKCHOC-45:
+    name: Jeju Milk Chocolate 45 g
+    line: HB-C2
+    format: solid_bar
+    ingredients: [milk chocolate]
+    process_steps: [tempering, solid_moulding, cooling, demoulding, wrapping]
+    free_from: [nut_free]
+  HB-HOTTEOK-6P:
+    name: Frozen Hotteok Sweet Pancakes 6 pcs
+    line: HB-F1
+    format: other
+    ingredients: [wheat flour, rice flour, brown sugar, cinnamon, yeast, soybean oil]
+    process_steps: [dough_mixing, frying, freezing, tray_sealing]
+    free_from: [dairy_free, egg_free, nut_free]

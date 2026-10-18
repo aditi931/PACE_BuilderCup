@@ -1,0 +1,11 @@
+# Which allergen tags / ingredient nodes void each free-from claim. Moved out of code (was FREE_FROM_ALLERGENS).
+# Tags are Open Food Facts allergen IDs; nodes are ingredient-taxonomy IDs matched against the full parent chain.
+claims:
+  nut_free:     {label: Nut-free,     allergens: [en:nuts, en:peanuts]}
+  peanut_free:  {label: Peanut-free,  allergens: [en:peanuts]}
+  gluten_free:  {label: Gluten-free,  allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt, en:triticale]}
+  dairy_free:   {label: Dairy-free,   allergens: [en:milk]}
+  egg_free:     {label: Egg-free,     allergens: [en:eggs]}
+  sesame_free:  {label: Sesame-free,  allergens: [en:sesame-seeds]}
+  soy_free:     {label: Soy-free,     allergens: [en:soybeans]}
+  mustard_free: {label: Mustard-free, allergens: [en:mustard]}

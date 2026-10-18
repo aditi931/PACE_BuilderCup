@@ -1,0 +1,490 @@
+# Market rules for Trend2Line. Researched 2026-10-15. Code reads this file; nothing market-specific is in app/.
+#
+# status, per source:
+#   verified_official  - read in the regulator's own text or page (URL below)
+#   verified_secondary - read in a government trade report, journal or specialist summary; check the
+#                        official text before relying on it
+#   needs_review       - widely known requirement, but the current official text was not checked here
+#
+# Allergen items trigger on Open Food Facts allergen tags (`allergens`) and/or ingredient-taxonomy nodes
+# (`nodes`, matched against the full parent chain of every ingredient, so 'pistachio paste' matches
+# en:pistachio-nuts). Use nodes when a law names specific foods (Japan: walnut, cashew; Australia: each nut).
+# `effective_from` lets a requirement start on a date; the engine compares it with the launch date.
+
+language_aliases: {cmn: zh, yue: zh, zh-sg: zh}
+
+tree_nut_nodes: &tree_nuts [en:almond, en:hazelnut, en:walnut, en:cashew-nuts, en:pecan-nut, en:brazil-nut,
+                            en:pistachio-nuts, en:macadamia-nut]
+
+markets:
+  IN:
+    name: India
+    regulator: FSSAI
+    countries: [IN]
+    wiki_languages: [en, hi, ta, te, mr, bn]
+    label_languages: [en, hi]
+    allergen_source:
+      title: 'FSS (Labelling and Display) Regulations 2020, regulation 5(14) (compendium version V, 13.10.2022)'
+      url: https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_17_10_2022.pdf
+      status: verified_official
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: "Cereals containing gluten (declare the cereal)", allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt]}
+      - {id: crustacean, label: Crustacean, allergens: [en:crustaceans]}
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: egg, label: Egg, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: nut, label: "Nut (peanuts and tree nuts)", allergens: [en:nuts, en:peanuts]}
+      - {id: soy, label: Soy, allergens: [en:soybeans]}
+      - {id: sulphite, label: "Sulphite (if 10 mg/kg or more)", allergens: [en:sulphur-dioxide-and-sulphites]}
+    rules:
+      - rule_id: IN-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Declare each listed allergen separately as "Contains ..." using the name the regulation prescribes (for example "Nut", "Milk").'
+        source: {title: "FSS (L&D) Regulations 2020, reg. 5(14)", url: "https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_17_10_2022.pdf", status: verified_official}
+      - rule_id: IN-MAY-CONTAIN
+        trigger: {type: cross_contact_on_line}
+        requirement: 'Allergens present through cross-contamination may be declared separately as "May contain ...".'
+        source: {title: "FSS (L&D) Regulations 2020, reg. 5(14) proviso", url: "https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_17_10_2022.pdf", status: verified_official}
+      - rule_id: IN-GLUTEN-FREE-PLANT
+        trigger: {type: free_from_claim_on_shared_line, claim: gluten_free}
+        requirement: 'A gluten-free product made in a plant that also makes gluten-containing products must state "Processed in a plant where gluten containing products are manufactured".'
+        source: {title: "FSS (L&D) Regulations 2020, Schedule II, 2.5", url: "https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_17_10_2022.pdf", status: verified_official}
+      - rule_id: IN-TRUE-NATURE
+        trigger: {type: place_name_in_product_name}
+        requirement: 'The name must indicate the true nature of the food and the label must not be misleading; review any place name that could imply an origin the product does not have.'
+        source: {title: "FSS (L&D) Regulations 2020, reg. 4(3) and 5(1)", url: "https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_17_10_2022.pdf", status: verified_official}
+      - rule_id: IN-FREEFROM-VOID
+        trigger: {type: free_from_conflict}
+        requirement: 'An existing free-from claim must be withdrawn or revalidated when that allergen is introduced to the line; labels must not be misleading.'
+        source: {title: "FSS (L&D) Regulations 2020, reg. 4(3)", url: "https://fssai.gov.in/upload/uploadfiles/files/Compendium_Labelling_Display_17_10_2022.pdf", status: verified_official}
+
+  EU:
+    name: European Union
+    regulator: European Commission (Regulation (EU) No 1169/2011)
+    countries: [AT, BE, BG, HR, CY, CZ, DK, EE, FI, FR, DE, GR, HU, IE, IT, LV, LT, LU, MT, NL, PL, PT, RO, SK, SI, ES, SE]
+    wiki_languages: [de, fr, it, es, pl, nl]
+    label_languages: [official language(s) of each member state]
+    allergen_source:
+      title: 'Regulation (EU) No 1169/2011, Annex II (14 substances or products)'
+      url: http://data.europa.eu/eli/reg/2011/1169/oj
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: "Cereals containing gluten (wheat, rye, barley, oats, spelt, kamut)", allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt]}
+      - {id: crustaceans, label: Crustaceans, allergens: [en:crustaceans]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: peanuts, label: Peanuts, allergens: [en:peanuts]}
+      - {id: soybeans, label: Soybeans, allergens: [en:soybeans]}
+      - {id: milk, label: "Milk (including lactose)", allergens: [en:milk]}
+      - {id: nuts, label: "Nuts (almond, hazelnut, walnut, cashew, pecan, Brazil, pistachio, macadamia)", nodes: *tree_nuts}
+      - {id: celery, label: Celery, allergens: [en:celery]}
+      - {id: mustard, label: Mustard, allergens: [en:mustard]}
+      - {id: sesame, label: Sesame seeds, allergens: [en:sesame-seeds]}
+      - {id: sulphites, label: "Sulphur dioxide and sulphites (over 10 mg/kg or 10 mg/l)", allergens: [en:sulphur-dioxide-and-sulphites]}
+      - {id: lupin, label: Lupin, allergens: [en:lupin]}
+      - {id: molluscs, label: Molluscs, allergens: [en:molluscs]}
+    rules:
+      - rule_id: EU-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Name each Annex II allergen in the ingredient list and emphasise it typographically (font, style or background).'
+        source: {title: "Reg. (EU) 1169/2011 Art. 9(1)(c) and Art. 21", url: "https://www.legislation.gov.uk/eur/2011/1169/article/21", status: verified_secondary}
+      - rule_id: EU-ORIGIN
+        trigger: {type: place_name_in_product_name}
+        requirement: 'Food information must not mislead as to country of origin or place of provenance; a place name in the product name needs a check.'
+        source: {title: "Reg. (EU) 1169/2011 Art. 7(1)(a)", url: "http://data.europa.eu/eli/reg/2011/1169/oj", status: needs_review}
+      - rule_id: EU-FREEFROM-VOID
+        trigger: {type: free_from_conflict}
+        requirement: 'A free-from claim on a shared line must be withdrawn or revalidated; voluntary information must not mislead.'
+        source: {title: "Reg. (EU) 1169/2011 Art. 36", url: "http://data.europa.eu/eli/reg/2011/1169/oj", status: needs_review}
+
+  GB:
+    name: United Kingdom
+    regulator: Food Standards Agency (retained Regulation 1169/2011)
+    countries: [GB]
+    wiki_languages: [en]
+    label_languages: [en]
+    allergen_source:
+      title: 'Retained Regulation (EU) No 1169/2011, Annex II (as it applies in Great Britain)'
+      url: https://www.legislation.gov.uk/eur/2011/1169/annex/II
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: "Cereals containing gluten", allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt]}
+      - {id: crustaceans, label: Crustaceans, allergens: [en:crustaceans]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: peanuts, label: Peanuts, allergens: [en:peanuts]}
+      - {id: soybeans, label: Soybeans, allergens: [en:soybeans]}
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: nuts, label: "Nuts (8 named tree nuts)", nodes: *tree_nuts}
+      - {id: celery, label: Celery, allergens: [en:celery]}
+      - {id: mustard, label: Mustard, allergens: [en:mustard]}
+      - {id: sesame, label: Sesame, allergens: [en:sesame-seeds]}
+      - {id: sulphites, label: "Sulphur dioxide and sulphites", allergens: [en:sulphur-dioxide-and-sulphites]}
+      - {id: lupin, label: Lupin, allergens: [en:lupin]}
+      - {id: molluscs, label: Molluscs, allergens: [en:molluscs]}
+    rules:
+      - rule_id: GB-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Name and emphasise each of the 14 allergens in the ingredient list.'
+        source: {title: "Retained Reg. 1169/2011 Art. 21", url: "https://www.legislation.gov.uk/eur/2011/1169/article/21", status: verified_secondary}
+      - rule_id: GB-FREEFROM-VOID
+        trigger: {type: free_from_conflict}
+        requirement: 'A free-from claim on a shared line must be withdrawn or revalidated.'
+        source: {title: "Retained Reg. 1169/2011 Art. 36", url: "https://www.legislation.gov.uk/eur/2011/1169/contents", status: needs_review}
+
+  US:
+    name: United States
+    regulator: FDA (FALCPA 2004, FASTER Act 2021)
+    countries: [US]
+    wiki_languages: [en]
+    label_languages: [en]
+    allergen_source:
+      title: 'FDA, Food Allergies (nine major food allergens; sesame since 1 Jan 2023)'
+      url: https://www.fda.gov/food/food-labeling-nutrition/food-allergies
+      status: verified_official
+      checked_on: 2026-10-15
+    allergens:
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish, label: "Fish (name the species)", allergens: [en:fish]}
+      - {id: crustacean_shellfish, label: "Crustacean shellfish (name the species)", allergens: [en:crustaceans]}
+      - {id: tree_nuts, label: "Tree nuts (name the nut)", allergens: [en:nuts], nodes: *tree_nuts}
+      - {id: peanuts, label: Peanuts, allergens: [en:peanuts]}
+      - {id: wheat, label: Wheat, nodes: [en:wheat, en:spelt]}
+      - {id: soybeans, label: Soybeans, allergens: [en:soybeans]}
+      - {id: sesame, label: Sesame, allergens: [en:sesame-seeds]}
+    rules:
+      - rule_id: US-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Show the food source name of each major allergen, either in parentheses in the ingredient list or in a "Contains" statement.'
+        source: {title: "FDA, Food Allergies: What You Need to Know", url: "https://fda.gov/media/164289/download", status: verified_official}
+      - rule_id: US-ADVISORY
+        trigger: {type: cross_contact_on_line}
+        requirement: '"May contain" statements are voluntary, must be truthful and not misleading, and are not a substitute for good manufacturing practice.'
+        source: {title: "FDA consumer leaflet on major food allergens", url: "https://fda.gov/media/164289/download", status: verified_official}
+      - rule_id: US-FREEFROM-VOID
+        trigger: {type: free_from_conflict}
+        requirement: 'A free-from claim on a line that now runs the allergen must be withdrawn or revalidated (gluten-free claims are defined in 21 CFR 101.91).'
+        source: {title: "21 CFR 101.91 (gluten-free)", url: "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-101/subpart-F/section-101.91", status: needs_review}
+
+  CA:
+    name: Canada
+    regulator: Health Canada / CFIA
+    countries: [CA]
+    wiki_languages: [en, fr]
+    label_languages: [en, fr]
+    allergen_source:
+      title: 'Health Canada, Allergens and gluten sources labelling'
+      url: https://www.canada.ca/en/health-canada/services/food-allergies-intolerances/avoiding-allergens-food/allergen-labelling.html
+      status: verified_official
+      checked_on: 2026-10-15
+    allergens:
+      - {id: peanuts, label: Peanuts, allergens: [en:peanuts]}
+      - {id: tree_nuts, label: "Tree nuts (almond, Brazil, cashew, hazelnut, macadamia, pecan, pine nut, pistachio, walnut)", nodes: [en:almond, en:brazil-nut, en:cashew-nuts, en:hazelnut, en:macadamia-nut, en:pecan-nut, en:pine-nuts, en:pistachio-nuts, en:walnut]}
+      - {id: sesame, label: Sesame seeds, allergens: [en:sesame-seeds]}
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish_shellfish, label: "Fish, crustaceans and molluscs", allergens: [en:fish, en:crustaceans, en:molluscs]}
+      - {id: soy, label: Soy, allergens: [en:soybeans]}
+      - {id: wheat_triticale, label: "Wheat or triticale", nodes: [en:wheat, en:triticale, en:spelt]}
+      - {id: mustard, label: Mustard, allergens: [en:mustard]}
+      - {id: gluten_sources, label: "Gluten sources (barley, oats, rye, triticale, wheat)", allergens: [en:gluten], nodes: [en:barley, en:oat, en:rye, en:triticale, en:wheat]}
+      - {id: sulphites, label: "Added sulphites (10 ppm or more)", allergens: [en:sulphur-dioxide-and-sulphites]}
+    rules:
+      - rule_id: CA-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Declare priority allergens, gluten sources and added sulphites in the ingredient list or in a "Contains" statement right after it, using common names.'
+        source: {title: "Health Canada, allergen labelling", url: "https://www.canada.ca/en/health-canada/services/food-allergies-intolerances/avoiding-allergens-food/allergen-labelling.html", status: verified_official}
+      - rule_id: CA-BILINGUAL
+        trigger: {type: label_language}
+        requirement: 'Mandatory label information must appear in English and French.'
+        source: {title: "Safe Food for Canadians Regulations, bilingual labelling", url: "https://inspection.canada.ca/en/food-labels", status: needs_review}
+      - rule_id: CA-FREEFROM-VOID
+        trigger: {type: free_from_conflict}
+        requirement: 'Labels must not be false or misleading, so a free-from claim must go when the allergen is on the line.'
+        source: {title: "Food and Drugs Act s.5", url: "https://inspection.canada.ca/en/food-labels", status: needs_review}
+
+  AU:
+    name: Australia and New Zealand
+    regulator: FSANZ (Standard 1.2.3, Plain English Allergen Labelling)
+    countries: [AU, NZ]
+    wiki_languages: [en]
+    label_languages: [en]
+    allergen_source:
+      title: 'FSANZ Plain English Allergen Labelling (PEAL) required names, summarised by Safe Food Queensland'
+      url: https://www.safefood.qld.gov.au/newsroom/understanding-plain-english-allergen-labelling-peal-for-packaged-food/
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: wheat, label: Wheat, nodes: [en:wheat, en:spelt]}
+      - {id: gluten_cereals, label: "Barley, oats, rye (declare as the cereal and gluten)", allergens: [en:gluten], nodes: [en:barley, en:oat, en:rye]}
+      - {id: crustacean, label: Crustacean, allergens: [en:crustaceans]}
+      - {id: egg, label: Egg, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: mollusc, label: Mollusc, allergens: [en:molluscs]}
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: lupin, label: Lupin, allergens: [en:lupin]}
+      - {id: peanut, label: Peanut, allergens: [en:peanuts]}
+      - {id: sesame, label: Sesame, allergens: [en:sesame-seeds]}
+      - {id: soy, label: Soy, allergens: [en:soybeans]}
+      - {id: sulphites, label: "Sulphites (10 mg/kg or more)", allergens: [en:sulphur-dioxide-and-sulphites]}
+      - {id: almond, label: Almond, nodes: [en:almond]}
+      - {id: brazil_nut, label: Brazil nut, nodes: [en:brazil-nut]}
+      - {id: cashew, label: Cashew, nodes: [en:cashew-nuts]}
+      - {id: hazelnut, label: Hazelnut, nodes: [en:hazelnut]}
+      - {id: macadamia, label: Macadamia, nodes: [en:macadamia-nut]}
+      - {id: pecan, label: Pecan, nodes: [en:pecan-nut]}
+      - {id: pine_nut, label: Pine nut, nodes: [en:pine-nuts]}
+      - {id: pistachio, label: Pistachio, nodes: [en:pistachio-nuts]}
+      - {id: walnut, label: Walnut, nodes: [en:walnut]}
+    rules:
+      - rule_id: AU-PEAL-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Use the PEAL required names (each tree nut by name, not "tree nuts") in the ingredient list and in a bold summary statement starting "Contains".'
+        source: {title: "FSANZ Standard 1.2.3 and Schedule 9 (PEAL)", url: "https://www.safefood.qld.gov.au/newsroom/understanding-plain-english-allergen-labelling-peal-for-packaged-food/", status: verified_secondary}
+      - rule_id: AU-FREEFROM-VOID
+        trigger: {type: free_from_conflict}
+        requirement: 'A free-from claim on a shared line must be withdrawn or revalidated.'
+        source: {title: "Australian Consumer Law, misleading conduct", url: "https://www.foodstandards.gov.au/", status: needs_review}
+
+  JP:
+    name: Japan
+    regulator: Consumer Affairs Agency (Food Labeling Act)
+    countries: [JP]
+    wiki_languages: [ja]
+    label_languages: [ja]
+    allergen_source:
+      title: "CAA specific raw materials: 9 mandatory from 1 Apr 2026 (cashew added, transition to 31 Mar 2028); pistachio added to the recommended list. Summarised in USDA FAS GAIN report JA2025-0006"
+      url: https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Japan+to+Mandate+Allergy+Labeling+on+Cashew+Nuts+and+to+Recommend+Allergy+Labeling+on+Pistachios_Tokyo_Japan_JA2025-0006
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: egg, label: Egg, allergens: [en:eggs]}
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: wheat, label: Wheat, nodes: [en:wheat]}
+      - {id: buckwheat, label: Buckwheat (soba), nodes: [en:buckwheat]}
+      - {id: peanut, label: Peanut, allergens: [en:peanuts]}
+      - {id: shrimp, label: Shrimp, nodes: [en:shrimp]}
+      - {id: crab, label: Crab, nodes: [en:crab]}
+      - {id: walnut, label: Walnut, nodes: [en:walnut]}
+      - {id: cashew, label: "Cashew nut (mandatory from 2026-04-01; transition to 2028-03-31)", nodes: [en:cashew-nuts], effective_from: 2026-04-01}
+    recommended:
+      - {id: almond, label: Almond, nodes: [en:almond]}
+      - {id: pistachio, label: "Pistachio (recommended from 2026)", nodes: [en:pistachio-nuts], effective_from: 2026-04-01}
+      - {id: sesame, label: Sesame, allergens: [en:sesame-seeds]}
+      - {id: soybean, label: Soybean, allergens: [en:soybeans]}
+      - {id: banana, label: Banana, allergens: [en:banana]}
+      - {id: kiwi, label: Kiwifruit, allergens: [en:kiwi]}
+      - {id: orange, label: Orange, allergens: [en:orange]}
+      - {id: peach, label: Peach, allergens: [en:peach]}
+      - {id: apple, label: Apple, allergens: [en:apple]}
+      - {id: gelatin, label: Gelatin, allergens: [en:gelatin]}
+      - {id: beef, label: Beef, allergens: [en:beef]}
+      - {id: pork, label: Pork, allergens: [en:pork]}
+      - {id: chicken, label: Chicken, allergens: [en:chicken]}
+      - {id: salmon, label: Salmon, nodes: [en:salmon]}
+      - {id: mackerel, label: Mackerel, nodes: [en:mackerel]}
+      - {id: squid, label: Squid, nodes: [en:squid]}
+      - {id: abalone, label: Abalone, nodes: [en:abalone]}
+      - {id: salmon_roe, label: Salmon roe, allergens: [en:red-caviar]}
+      - {id: yam, label: Yam (yamaimo), allergens: [en:yamaimo]}
+      - {id: matsutake, label: Matsutake, allergens: [en:matsutake]}
+    rules:
+      - rule_id: JP-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Mandatory "specific raw materials" must be labelled in Japanese next to the ingredient, e.g. "(乳成分を含む)".'
+        source: {title: "Tokyo Metropolitan Government guide for first-time importers", url: "https://www.hokeniryo1.metro.tokyo.lg.jp/shokuhin/eng/hyouji/yunyuu.html", status: verified_official}
+      - rule_id: JP-RECOMMENDED
+        trigger: {type: recommended_present}
+        requirement: 'Recommended items (for example almond, sesame, soybean and, from 2026, pistachio) should be labelled as well.'
+        source: {title: "USDA FAS GAIN JA2025-0006", url: "https://apps.fas.usda.gov/newgainapi/api/Report/DownloadReportByFileName?fileName=Japan+to+Mandate+Allergy+Labeling+on+Cashew+Nuts+and+to+Recommend+Allergy+Labeling+on+Pistachios_Tokyo_Japan_JA2025-0006", status: verified_secondary}
+      - rule_id: JP-LANGUAGE
+        trigger: {type: label_language}
+        requirement: 'All mandatory label information must be in Japanese.'
+        source: {title: "Food Labeling Act summary", url: "https://jmgateway.com/food-labeling-act.html", status: verified_secondary}
+
+  KR:
+    name: South Korea
+    regulator: Ministry of Food and Drug Safety (MFDS)
+    countries: [KR]
+    wiki_languages: [ko]
+    label_languages: [ko]
+    allergen_source:
+      title: "Korean allergen labelling: 19 items / 22 foods (Allergy Asthma Respir Dis 2019;7(2):67-72)"
+      url: https://synapse.koreamed.org/articles/1126502
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: egg, label: "Eggs (poultry)", allergens: [en:eggs]}
+      - {id: milk, label: Milk, allergens: [en:milk]}
+      - {id: buckwheat, label: Buckwheat, nodes: [en:buckwheat]}
+      - {id: peanut, label: Peanut, allergens: [en:peanuts]}
+      - {id: soybean, label: Soybean, allergens: [en:soybeans]}
+      - {id: wheat, label: Wheat, nodes: [en:wheat]}
+      - {id: mackerel, label: Mackerel, nodes: [en:mackerel]}
+      - {id: crab, label: Crab, nodes: [en:crab]}
+      - {id: shrimp, label: Shrimp, nodes: [en:shrimp]}
+      - {id: pork, label: Pork, allergens: [en:pork]}
+      - {id: peach, label: Peach, allergens: [en:peach]}
+      - {id: tomato, label: Tomato, nodes: [en:tomato]}
+      - {id: sulphite, label: "Sulphurous acid (10 mg/kg SO2 or more)", allergens: [en:sulphur-dioxide-and-sulphites]}
+      - {id: walnut, label: Walnut, nodes: [en:walnut]}
+      - {id: chicken, label: Chicken, allergens: [en:chicken]}
+      - {id: beef, label: Beef, allergens: [en:beef]}
+      - {id: squid, label: Squid, nodes: [en:squid]}
+      - {id: shellfish, label: "Shellfish (oyster, abalone, mussel)", nodes: [en:oyster, en:abalone, en:mussel]}
+      - {id: pine_nut, label: Pine nut, nodes: [en:pine-nuts]}
+    rules:
+      - rule_id: KR-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'List each designated allergen in a separate, contrasting allergen box on the pack. Note that almond, cashew and pistachio are not on the Korean list.'
+        source: {title: "MFDS allergen labelling summary (ChemLinked)", url: "https://food.chemlinked.com/news/food-news/korea-expand-food-allergen-mandatory-labeling-scope", status: verified_secondary}
+
+  CN:
+    name: China
+    regulator: NHC / SAMR (GB 7718-2025)
+    countries: [CN]
+    wiki_languages: [zh]
+    label_languages: [zh]
+    allergen_source:
+      title: "GB 7718-2025, 4.12 and Annex D: eight allergen categories become mandatory on 16 Mar 2027"
+      url: https://leap.unep.org/en/countries/cn/national-legislation/national-food-safety-standard-general-rules-labelling-prepackaged
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: Cereals containing gluten, allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt], effective_from: 2027-03-16}
+      - {id: crustaceans, label: Crustaceans, allergens: [en:crustaceans], effective_from: 2027-03-16}
+      - {id: fish, label: Fish, allergens: [en:fish], effective_from: 2027-03-16}
+      - {id: eggs, label: Eggs, allergens: [en:eggs], effective_from: 2027-03-16}
+      - {id: peanuts, label: Peanuts, allergens: [en:peanuts], effective_from: 2027-03-16}
+      - {id: soybeans, label: Soybeans, allergens: [en:soybeans], effective_from: 2027-03-16}
+      - {id: milk, label: Milk, allergens: [en:milk], effective_from: 2027-03-16}
+      - {id: nuts, label: Tree nuts, allergens: [en:nuts], effective_from: 2027-03-16}
+    rules:
+      - rule_id: CN-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'From 16 March 2027, highlight the eight allergen categories in the ingredient list (bold or underline) or state them beneath it.'
+        source: {title: "GB 7718-2025 summary (Packaging Gateway)", url: "https://www.packaging-gateway.com/?p=116353", status: verified_secondary}
+      - rule_id: CN-FREE-FROM-CLAIMS
+        trigger: {type: free_from_claim_on_shared_line}
+        requirement: 'GB 7718-2025 sets conditions for "free from" / "not added" claims; "allergen-free" is not officially defined. Review every free-from claim.'
+        source: {title: "GB 7718-2025 summary (Keller and Heckman)", url: "https://www.khlaw.com/index%2ephp/insights/breaking-news-china-publishes-revised-food-labeling-requirements", status: verified_secondary}
+      - rule_id: CN-LANGUAGE
+        trigger: {type: label_language}
+        requirement: 'Imported food labels must carry Simplified Chinese for all mandatory content.'
+        source: {title: "China food labeling update (MPR)", url: "https://www.china-certification.com/en/new-chinese-food-labeling-standards-set-forth-for-2027-implementation", status: verified_secondary}
+
+  SG:
+    name: Singapore
+    regulator: Singapore Food Agency (Food Regulations)
+    countries: [SG]
+    wiki_languages: [en, zh, ms, ta]
+    label_languages: [en]
+    allergen_source:
+      title: 'SFA, Protecting consumers from food allergens'
+      url: https://www.sfa.gov.sg/food-information/food-allergens/protecting-consumers-from-food-allergens
+      status: verified_official
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: Cereals containing gluten, allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt]}
+      - {id: crustacea, label: Crustacea, allergens: [en:crustaceans]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: peanuts_soy, label: "Peanuts and soybeans", allergens: [en:peanuts, en:soybeans]}
+      - {id: milk, label: "Milk (including lactose)", allergens: [en:milk]}
+      - {id: tree_nuts, label: Tree nuts, nodes: *tree_nuts}
+      - {id: sulphite, label: "Sulphite (10 mg/kg or more)", allergens: [en:sulphur-dioxide-and-sulphites]}
+    rules:
+      - rule_id: SG-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Declare the listed allergens in the statement of ingredients of prepacked food.'
+        source: {title: "SFA food allergens page", url: "https://www.sfa.gov.sg/food-information/food-allergens/protecting-consumers-from-food-allergens", status: verified_official}
+      - rule_id: SG-GLUTEN-FREE
+        trigger: {type: free_from_claim_on_shared_line, claim: gluten_free}
+        requirement: 'From 30 Jan 2026 "gluten-free" means 20 mg/kg gluten or less; test and document before keeping the claim on a shared line.'
+        source: {title: "Food (Amendment) Regulations 2025 summary (ChemLinked)", url: "https://food.chemlinked.com/news/food-news/singapore-changes-labeling-requirements-for-prepacked-foods-effective-from-january-30-2026", status: verified_secondary}
+
+  GCC:
+    name: Gulf Cooperation Council (UAE, Saudi Arabia, Kuwait, Qatar, Bahrain, Oman)
+    regulator: GCC Standardization Organization (GSO 9)
+    countries: [AE, SA, KW, QA, BH, OM]
+    wiki_languages: [ar]
+    label_languages: [ar]
+    allergen_source:
+      title: "GSO 9/2013 Labeling of Prepackaged Food Stuffs, clause 5.2.5. Superseded by GSO 9:2022; allergen rules now also in GSO 2810:2025 - check the current text"
+      url: https://servicio.mapama.gob.es/cexgan/DocumentacionPublica/GSO-9-2013-E.pdf
+      status: needs_review
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: Cereals containing gluten, allergens: [en:gluten], nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt]}
+      - {id: crustacea, label: Crustacea, allergens: [en:crustaceans]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: peanuts_soy, label: "Peanuts and soybeans", allergens: [en:peanuts, en:soybeans]}
+      - {id: tree_nuts, label: "Tree nuts (English text says 'walnuts')", allergens: [en:nuts]}
+      - {id: milk, label: "Milk (including lactose)", allergens: [en:milk]}
+      - {id: sulphite, label: "Sulphite (10 ppm or more)", allergens: [en:sulphur-dioxide-and-sulphites]}
+      - {id: celery, label: Celery, allergens: [en:celery]}
+      - {id: mustard, label: Mustard, allergens: [en:mustard]}
+      - {id: sesame, label: Sesame seeds, allergens: [en:sesame-seeds]}
+      - {id: molluscs, label: "Clams / molluscs", allergens: [en:molluscs]}
+      - {id: lupin, label: Lupin, allergens: [en:lupin]}
+    rules:
+      - rule_id: GCC-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Declare foods and ingredients that cause hypersensitivity as "contains ...".'
+        source: {title: "GSO 9/2013 clause 5.2.5", url: "https://servicio.mapama.gob.es/cexgan/DocumentacionPublica/GSO-9-2013-E.pdf", status: needs_review}
+      - rule_id: GCC-ARABIC
+        trigger: {type: label_language}
+        requirement: 'Labelling must be in Arabic; any other language must sit alongside and match the Arabic.'
+        source: {title: "GSO 9/2013 clause 7.2.1", url: "https://servicio.mapama.gob.es/cexgan/DocumentacionPublica/GSO-9-2013-E.pdf", status: needs_review}
+      - rule_id: GCC-NOT-MISLEADING
+        trigger: {type: place_name_in_product_name}
+        requirement: 'Food must not be described in a false, misleading or deceptive way; check any place name in the product name.'
+        source: {title: "GSO 9/2013 clause 4.2", url: "https://servicio.mapama.gob.es/cexgan/DocumentacionPublica/GSO-9-2013-E.pdf", status: needs_review}
+
+  BR:
+    name: Brazil
+    regulator: ANVISA (RDC 727/2022)
+    countries: [BR]
+    wiki_languages: [pt]
+    label_languages: [pt]
+    allergen_source:
+      title: "ANVISA RDC 727/2022 (consolidates RDC 26/2015), Annex: main foods causing allergies. A revision was under consultation in 2025"
+      url: https://antigo.anvisa.gov.br/documents/10181/6503668/(1)RDC_727_2022_COMP.pdf/8167fbac-395a-4189-ab43-024e4d3aa667
+      status: verified_secondary
+      checked_on: 2026-10-15
+    allergens:
+      - {id: gluten_cereals, label: "Wheat, rye, barley, oats and hybrids", nodes: [en:wheat, en:rye, en:barley, en:oat, en:spelt, en:triticale]}
+      - {id: crustaceans, label: "Crustaceans (name the species)", allergens: [en:crustaceans]}
+      - {id: eggs, label: Eggs, allergens: [en:eggs]}
+      - {id: fish, label: Fish, allergens: [en:fish]}
+      - {id: peanut, label: Peanut, allergens: [en:peanuts]}
+      - {id: soy, label: Soy, allergens: [en:soybeans]}
+      - {id: milk, label: "Milk of all mammals", allergens: [en:milk]}
+      - {id: almond, label: Almond, nodes: [en:almond]}
+      - {id: hazelnut, label: Hazelnut, nodes: [en:hazelnut]}
+      - {id: cashew, label: Cashew, nodes: [en:cashew-nuts]}
+      - {id: brazil_nut, label: Brazil nut, nodes: [en:brazil-nut]}
+      - {id: macadamia, label: Macadamia, nodes: [en:macadamia-nut]}
+      - {id: walnut, label: Walnut, nodes: [en:walnut]}
+      - {id: pecan, label: Pecan, nodes: [en:pecan-nut]}
+      - {id: pistachio, label: Pistachio, nodes: [en:pistachio-nuts]}
+      - {id: pine_nut, label: Pine nut, nodes: [en:pine-nuts]}
+      - {id: chestnut, label: "Chestnut (Castanea spp.)", nodes: [en:chestnut]}
+    rules:
+      - rule_id: BR-ALLERGEN-DECL
+        trigger: {type: allergen_declared}
+        requirement: 'Print "ALÉRGICOS: CONTÉM ..." right after the ingredient list, in capitals, bold, contrasting colour, at least 2 mm high.'
+        source: {title: "RDC 26/2015 text (Conass) and RDC 727/2022", url: "https://www.conass.org.br/?p=4109", status: verified_secondary}
+      - rule_id: BR-GLUTEN-STATEMENT
+        trigger: {type: always}
+        requirement: 'Every packaged food must say "CONTÉM GLÚTEN" or "NÃO CONTÉM GLÚTEN" (Lei 10.674/2003).'
+        source: {title: "ANVISA labelling summary", url: "https://www.boaconta.com.br/rotulagem-nutricional/rotulagem-de-alergenicos/", status: verified_secondary}
+      - rule_id: BR-NO-ALLERGEN-FREE-CLAIM
+        trigger: {type: free_from_claim_on_shared_line}
+        requirement: 'Labels may not claim the absence of allergenic foods except where a specific rule allows it; review free-from claims.'
+        source: {title: "RDC 727/2022 Art. 4", url: "https://antigo.anvisa.gov.br/documents/10181/6503668/(1)RDC_727_2022_COMP.pdf/8167fbac-395a-4189-ab43-024e4d3aa667", status: verified_secondary}

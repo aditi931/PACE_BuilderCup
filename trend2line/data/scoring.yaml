@@ -1,0 +1,8 @@
+# SAMPLE COMPANY INPUT: weights for the market scan. Each component is rank-normalised to 0..1 across the
+# markets scanned, so the weights are the only judgement call; change them to match your strategy.
+weights:
+  interest_momentum: 0.30     # 90-day momentum of the market's own-language Wikipedia interest
+  interest_level: 0.15        # current smoothed daily views in the market's languages
+  market_size: 0.20           # population x GDP per capita (World Bank)
+  purchasing_power: 0.15      # GDP per capita (World Bank)
+  compliance_ease: 0.20       # fewer mandatory allergen declarations and label languages to add

@@ -1,0 +1,21 @@
+# SAMPLE COMPANY INPUT: task durations in days. Replace with your own project history.
+provenance: sample_company_input
+in_house:
+  supplier_qualification: 21
+  trials: 10
+  allergen_cleaning_validation: 14
+  label_artwork: 14
+  ramp_up: 7
+  distribution_fill: 10
+co_manufacturer:
+  onboarding: 14
+  trials: 10
+  label_artwork: 14
+  ramp_up: 7
+  distribution_fill: 10
+# Added when the target market needs a label language the company does not already print.
+label_localisation: 10
+decision:
+  go_capture: 0.5
+  conditional_capture: 0.25
+  prefer_in_house_within: 0.10   # pick in-house unless co-man capture is >10 points better

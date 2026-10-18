@@ -1,0 +1,119 @@
+# SAMPLE COMPANY INPUT. No public dataset describes a specific factory's lines, so this file is an
+# illustrative multi-category plant. Replace it with your own (or upload one in the UI); the schema mirrors an
+# ERP equipment master + SKU master. Line allergens are COMPUTED from the SKU ingredients (Open Food Facts
+# taxonomy) plus `extra_allergens` for anything handled on the line that is not in a listed SKU.
+company: "Sample Foods Pvt Ltd (illustrative)"
+provenance: sample_company_input
+home_market: IN
+base_label_languages: [en, hi]
+
+lines:
+  L2:
+    name: Moulding line 2
+    category: confectionery
+    capabilities: [tempering, solid_moulding, shell_moulding, cooling_tunnel, flow_wrap]
+    rate_kg_h: 400
+  L3:
+    name: One-shot depositing line 3
+    category: confectionery
+    capabilities: [tempering, one_shot_depositing, cooling_tunnel, flow_wrap]
+    rate_kg_h: 300
+  L4:
+    name: Enrobing line 4
+    category: confectionery
+    capabilities: [tempering, enrobing, toasting, cooling_tunnel, flow_wrap]
+    rate_kg_h: 500
+  B1:
+    name: Bakery line B1
+    category: bakery
+    capabilities: [dough_mixer, laminator, proofer, oven, cooling_tunnel, ultrasonic_cutter, flow_wrap]
+    rate_kg_h: 600
+  D1:
+    name: Dairy and beverage line D1
+    category: dairy_beverage
+    capabilities: [high_shear_mixing, pasteuriser, homogeniser, liquid_filler, cup_filler_sealer, cooking_kettle]
+    rate_kg_h: 2000
+  S1:
+    name: Snacks line S1
+    category: snacks
+    capabilities: [fryer, extruder, seasoning_drum, vffs]
+    rate_kg_h: 350
+
+skus:
+  CLASSIC-100:
+    name: Classic Milk Chocolate 100 g
+    line: L2
+    format: solid_bar
+    ingredients: [milk chocolate]
+    process_steps: [tempering, solid_moulding, cooling, demoulding, wrapping]
+    free_from: []
+  KIDS-NF-40:
+    name: Kids Nut-Free Bar 40 g
+    line: L2
+    format: solid_bar
+    ingredients: [milk chocolate, rice crisp]
+    process_steps: [tempering, solid_moulding, cooling, demoulding, wrapping]
+    free_from: [nut_free]
+  ALMOND-90:
+    name: Almond Crunch 90 g
+    line: L3
+    format: solid_bar
+    ingredients: [milk chocolate, almond]
+    process_steps: [tempering, solid_moulding, cooling, demoulding, wrapping]
+    free_from: []
+  WAFER-35:
+    name: Choco Wafer 35 g
+    line: L4
+    format: enrobed_bar
+    ingredients: [milk chocolate, wheat flour, sugar, soy lecithin]
+    process_steps: [tempering, baking, enrobing, cooling, wrapping]
+    free_from: []
+  GF-BITES-25:
+    name: Gluten-Free Choco Bites 25 g
+    line: L4
+    format: bite
+    ingredients: [dark chocolate, rice crisp]
+    process_steps: [tempering, enrobing, cooling, wrapping]
+    free_from: [gluten_free]
+  CROISSANT-60:
+    name: Butter Croissant 60 g
+    line: B1
+    format: bakery
+    ingredients: [wheat flour, butter, egg, sugar, yeast, salt]
+    process_steps: [dough_mixing, sheeting_laminating, proofing, baking, cooling, wrapping]
+    free_from: []
+  RUSK-EF-200:
+    name: Eggless Rusk 200 g
+    line: B1
+    format: bakery
+    ingredients: [wheat flour, sugar, palm oil, semolina]
+    process_steps: [dough_mixing, proofing, baking, cooling, cutting, wrapping]
+    free_from: [egg_free]
+  COLDCOFFEE-200:
+    name: Cold Coffee 200 ml
+    line: D1
+    format: beverage
+    ingredients: [milk, instant coffee, sugar]
+    process_steps: [mixing, pasteurisation, homogenisation, liquid_filling]
+    free_from: []
+  OATDRINK-1L:
+    name: Oat Drink 1 L
+    line: D1
+    format: beverage
+    ingredients: [oat, water, sunflower oil, salt]
+    process_steps: [mixing, pasteurisation, homogenisation, liquid_filling]
+    free_from: [dairy_free]
+  CHIPS-50:
+    name: Salted Potato Chips 50 g
+    line: S1
+    format: snack
+    ingredients: [potato, sunflower oil, salt]
+    process_steps: [frying, seasoning, wrapping]
+    free_from: [gluten_free, nut_free, dairy_free]
+  PUFFS-40:
+    name: Masala Corn Puffs 40 g
+    line: S1
+    format: snack
+    ingredients: [cornmeal, rice flour, spice, salt, sunflower oil]
+    process_steps: [extrusion, seasoning, wrapping]
+    free_from: [nut_free]

@@ -1,0 +1,37 @@
+capability,option,lead_time_days,kind,provenance
+toasting,Buy pre-toasted inclusion from a supplier,21,outsource,sample company input
+toasting,Install a batch toaster,42,equipment,sample company input
+roaster,Buy pre-roasted nuts,14,outsource,sample company input
+filling_depositing,Lease a filling depositor,56,equipment,sample company input
+one_shot_depositing,Install a one-shot depositor,120,equipment,sample company input
+shell_moulding,Add shell-moulding plates,35,equipment,sample company input
+panning_drum,Install a panning drum,60,equipment,sample company input
+high_shear_mixing,Install a high-shear mixer,60,equipment,sample company input
+cooking_kettle,Install a jacketed cooking kettle,45,equipment,sample company input
+cooking_kettle,Buy the sauce or filling ready-made,21,outsource,sample company input
+oven,Install a tunnel oven,150,equipment,sample company input
+fryer,Install a continuous fryer,120,equipment,sample company input
+batter_applicator,Add a batter applicator,50,equipment,sample company input
+laminator,Install a dough laminator,110,equipment,sample company input
+proofer,Install a proofing cabinet,40,equipment,sample company input
+steamer,Install a continuous steamer,70,equipment,sample company input
+extruder,Install a snack extruder,160,equipment,sample company input
+seasoning_drum,Add a seasoning drum,30,equipment,sample company input
+pasteuriser,Install an HTST pasteuriser,140,equipment,sample company input
+homogeniser,Install a homogeniser,90,equipment,sample company input
+carbonator,Install a carbonator,80,equipment,sample company input
+liquid_filler,Install a bottle filler,100,equipment,sample company input
+cup_filler_sealer,Install a cup filler-sealer,75,equipment,sample company input
+blast_freezer,Install a blast freezer,60,equipment,sample company input
+continuous_freezer,Install a continuous ice-cream freezer,120,equipment,sample company input
+ultrasonic_cutter,Add an ultrasonic cutter,45,equipment,sample company input
+tray_sealer,Add a tray sealer,40,equipment,sample company input
+ribbon_blender,Install a ribbon blender,50,equipment,sample company input
+cooling_tunnel,Install a cooling tunnel,90,equipment,sample company input
+dough_mixer,Install a spiral dough mixer,45,equipment,sample company input
+enrobing,Install an enrober,110,equipment,sample company input
+flow_wrap,Add a flow-wrapper,60,equipment,sample company input
+guillotine,Add a guillotine cutter,30,equipment,sample company input
+solid_moulding,Add solid-moulding plates,35,equipment,sample company input
+tempering,Install a tempering unit,75,equipment,sample company input
+vffs,Add a vertical form-fill-seal bagger,70,equipment,sample company input
