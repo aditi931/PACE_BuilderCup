@@ -6,3 +6,4 @@ tests
 .pytest_cache
 .env
 adk_app
+.doctor_cache

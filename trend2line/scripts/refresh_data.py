@@ -7,6 +7,11 @@ Usage (from the repo root, needs internet):
 Writes data/manifest.json with URL, licence, byte size, sha256 and fetch time for each file, so the
 UI and the judges can see exactly where every number came from.
 """
+import sys as _sys
+
+if hasattr(_sys.stdout, "reconfigure"):  # Windows consoles: print non-English titles safely
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 import argparse
 import csv
 import datetime as dt
@@ -101,17 +106,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--offline", action="store_true", help="skip downloads, rebuild derived tables only")
     args = ap.parse_args()
-    sources = yaml.safe_load((DATA_DIR / "sources.yaml").read_text())["sources"]
+    sources = yaml.safe_load((DATA_DIR / "sources.yaml").read_text(encoding="utf-8"))["sources"]
     rows = download(sources, args.offline)
     n = build_market_indicators()
     print(f"derived/market_indicators.csv: {n} countries")
     manifest_path = DATA_DIR / "manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
     manifest["sources"] = rows
     manifest["derived"] = {"market_indicators": {"file": "derived/market_indicators.csv", "rows": n,
                                                  "built_from": ["wb_population", "wb_gdp", "country_codes"]}}
     manifest["refreshed_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False))
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
     if any(r["status"] == "missing" for r in rows):
         sys.exit("Some sources are missing; see above.")
 

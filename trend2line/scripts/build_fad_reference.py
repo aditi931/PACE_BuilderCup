@@ -5,6 +5,11 @@ Candidates live in data/fad_candidates.csv (title, Wikipedia language, origin re
 built from fads that started in different regions and languages. Titles that 404, are too short, or never
 fall below 50% of their peak are skipped and reported. The Dockerfile runs this during the Cloud Run build.
 """
+import sys as _sys
+
+if hasattr(_sys.stdout, "reconfigure"):  # Windows consoles: print non-English titles safely
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 import csv
 import datetime as dt
 import json
@@ -62,7 +67,7 @@ def main() -> None:
                      "class": "flash" if rise <= FLASH_RISE_DAYS_MAX else "standard"})
         print(f"  {c['wiki']}:{c['title']:<28} peak {peak} rise {rise:>4}d half-life {half:>4}d")
 
-    placeholder = json.loads((DATA_DIR / "fad_reference.json").read_text())
+    placeholder = json.loads((DATA_DIR / "fad_reference.json").read_text(encoding="utf-8"))
     classes, complete = {}, True
     for cls in ("flash", "standard"):
         hl = [r["half_life_days"] for r in rows if r["class"] == cls]
@@ -87,7 +92,7 @@ def main() -> None:
         print(f"Only {len(rows)} fads measured; keeping the existing computed reference from "
               f"{placeholder.get('computed_on')}.")
         sys.exit(2)
-    (DATA_DIR / "fad_reference.json").write_text(json.dumps(out, indent=2, ensure_ascii=False))
+    (DATA_DIR / "fad_reference.json").write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
     print(json.dumps(classes, indent=2), f"\nstatus {out['status']}; used {len(rows)}, skipped {len(skipped)}")
     if not complete:
         sys.exit(2)

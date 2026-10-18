@@ -1,4 +1,9 @@
 """Hit every live data source once and report. Run before a demo:  python -m scripts.smoke_live"""
+import sys as _sys
+
+if hasattr(_sys.stdout, "reconfigure"):  # Windows consoles: print non-English titles safely
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 import datetime as dt
 
 from app.config import get_settings

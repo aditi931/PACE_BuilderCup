@@ -156,8 +156,8 @@ Singapore, the Gulf states (UAE, Saudi Arabia, Kuwait, Qatar, Bahrain, Oman) and
 app/        the application (the researcher, calculator and fact-checker)
 data/       all the facts the app relies on: markets, ingredients, sample plant
 static/     the web page
-scripts/    data refresh and health checks
-tests/      automatic checks (29 of them)
+scripts/    data refresh and health checks (start with: python -m scripts.doctor)
+tests/      automatic checks (32 of them)
 docs/TECHNICAL.md   developer details
 SETUP.md    Google Cloud setup and when each service is called
 ROADMAP.md  what to build next

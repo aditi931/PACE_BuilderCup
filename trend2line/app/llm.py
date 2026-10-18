@@ -74,7 +74,7 @@ class LLM:
         path = self.s.cache_dir / f"{self._key(task, prompt, schema, image)}.json"
         if path.exists():
             self.cache_hits += 1
-            return schema.model_validate_json(path.read_text())
+            return schema.model_validate_json(path.read_text(encoding="utf-8"))
 
         from google.genai import types
 
@@ -93,7 +93,7 @@ class LLM:
                 self.calls += 1
                 parsed = resp.parsed if isinstance(getattr(resp, "parsed", None), schema) \
                     else schema.model_validate_json(resp.text)
-                path.write_text(parsed.model_dump_json())
+                path.write_text(parsed.model_dump_json(), encoding="utf-8")
                 return parsed
             except LLMError:
                 raise

@@ -37,7 +37,7 @@ class Http:
         key = hashlib.sha256((url + json.dumps(params or {}, sort_keys=True)).encode()).hexdigest()[:32]
         path = self.dir / f"{key}.json" if self.dir else None
         if path and path.exists() and time.time() - path.stat().st_mtime < self.ttl:
-            return json.loads(path.read_text())
+            return json.loads(path.read_text(encoding="utf-8"))
         r = httpx.get(url, params=params, headers={"User-Agent": self.ua}, timeout=20)
         self.requests += 1
         if r.status_code == 404 and allow_404:
@@ -46,7 +46,7 @@ class Http:
             r.raise_for_status()
             data = r.json()
         if path:
-            path.write_text(json.dumps(data))
+            path.write_text(json.dumps(data), encoding="utf-8")
         return data
 
 

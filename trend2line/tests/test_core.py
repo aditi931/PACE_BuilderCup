@@ -295,3 +295,31 @@ def test_deadline_in_run_output_and_verified_by_writer():
     claims = {c["field"]: c["status"] for c in j["verification"]["claims"] if c.get("field")}
     assert claims.get("go_by_days.median") == "verified" and claims.get("go_by_date.median") == "verified"
     assert all("deadline_go_days" in r for r in j["market_scan"])
+
+
+# --- local setup helpers -------------------------------------------------------
+def test_dotenv_loader_handles_quotes_comments_and_never_overrides(tmp_path, monkeypatch):
+    from app.config import load_dotenv
+    monkeypatch.setenv("T2L_KEEP", "real")
+    f = tmp_path / ".env"
+    f.write_text('# comment\nexport T2L_A="Trend2Line/0.2 (me@x.com)"\nT2L_B=plain  # note\nT2L_KEEP="from-file"\n',
+                 encoding="utf-8")
+    for k in ("T2L_A", "T2L_B"):
+        monkeypatch.delenv(k, raising=False)
+    loaded = load_dotenv(f)
+    assert os.environ["T2L_A"] == "Trend2Line/0.2 (me@x.com)" and os.environ["T2L_B"] == "plain"
+    assert os.environ["T2L_KEEP"] == "real" and "T2L_KEEP" not in loaded
+
+
+def test_no_credentials_defaults_to_mock(monkeypatch):
+    for k in ("MOCK_LLM", "GOOGLE_API_KEY", "GOOGLE_CLOUD_PROJECT"):
+        monkeypatch.delenv(k, raising=False)
+    assert get_settings().mock_llm is True
+    monkeypatch.setenv("GOOGLE_API_KEY", "AQ.x")
+    assert get_settings().mock_llm is False
+
+
+def test_shell_scripts_use_unix_line_endings():
+    from app.config import BASE_DIR
+    for f in ("deploy.sh", "Dockerfile", "scripts/check_no_anthropic.sh"):
+        assert b"\r\n" not in (BASE_DIR / f).read_bytes(), f

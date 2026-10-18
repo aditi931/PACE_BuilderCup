@@ -95,35 +95,67 @@ with email alerts. This is the simplest protection against surprises.
 
 ## 4. Run it on your laptop first
 
-### 4a. Offline (no keys, no internet needed)
+Run everything **from the repo folder** (the one containing `app/`, `data/` and `deploy.sh`). The app reads `.env`
+by itself, so the same steps work in every terminal; you never need `source .env` or `VAR=1 command` tricks.
+
+### 4a. Create the environment (once)
+
+| Step | Git Bash (Windows) | PowerShell (Windows) | Mac / Linux |
+|---|---|---|---|
+| Create | `python -m venv .venv` (or `py -m venv .venv`) | `python -m venv .venv` | `python3 -m venv .venv` |
+| Activate (every new terminal) | `source .venv/Scripts/activate` | `.venv\Scripts\Activate.ps1` | `source .venv/bin/activate` |
+| Install | `pip install -r requirements-dev.txt` | same | same |
+| Settings | `cp .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
+
+If PowerShell refuses to run `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
+
+### 4b. Health check (do this first, and whenever something breaks)
 
 ```bash
-unzip trend2line_v0.4.zip && cd trend2line
-python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pip install -r requirements-dev.txt
-pytest -q                                              # should say 29 passed
+python -m scripts.doctor
 ```
 
-### 4b. Live data, canned AI (no key needed)
+It checks Python, packages, `.env`, your key type, data files, line endings, an offline end-to-end run and network
+access to Wikipedia, Wikidata and Gemini, and prints a fix next to every FAIL. Paste its output when asking for help.
+
+### 4c. Tests (no keys, no internet)
 
 ```bash
-MOCK_LLM=1 uvicorn app.main:app --reload --port 8080
+pytest -q          # should say 32 passed
 ```
 
-Open http://localhost:8080 and pick a trend from the list.
-
-### 4c. Fully live
+### 4d. Run the app
 
 ```bash
-cp .env.example .env
-# edit .env: set GOOGLE_API_KEY, and a contact email in WIKI_USER_AGENT
-set -a && source .env && set +a
-python -m scripts.smoke_live       # checks Wikipedia, Wikidata and page views
-python -m scripts.smoke_gemini     # shows the auth path and lists models your key can use
-# put one of the listed Flash models into GEMINI_MODEL in .env, reload it, then:
-python -m scripts.smoke_gemini     # should end with "structured call OK"
-python -m scripts.build_fad_reference   # computes real fad half-lives (a few minutes)
 uvicorn app.main:app --reload --port 8080
+```
+
+Open http://localhost:8080. Which mode you get depends on `.env`:
+
+| `.env` | Mode | What you see |
+|---|---|---|
+| `MOCK_LLM="1"` (the default in `.env.example`) | Live trend data, canned Gemini | Banner "MOCK GEMINI" |
+| `MOCK_LLM="0"`, `GOOGLE_API_KEY` and `GEMINI_MODEL` set | Fully live | No banner |
+| `OFFLINE="1"` | No internet at all, synthetic curves | Banner "OFFLINE MODE" (tests only) |
+
+With no `.env` and no key at all, the app falls back to mock Gemini rather than failing.
+
+### 4e. Go fully live
+
+1. Put your key in `.env` as `GOOGLE_API_KEY="..."` and set `MOCK_LLM="0"`.
+2. Run `python -m scripts.smoke_gemini`. It shows the auth path and lists the models your key can use.
+3. Put one Flash model into `GEMINI_MODEL="..."` in `.env`.
+4. Run `python -m scripts.doctor --gemini`. It should end with 0 FAIL.
+5. Run `python -m scripts.build_fad_reference` to compute real fad half-lives (a few minutes).
+6. Start the app again.
+
+### 4f. If Windows shows strange "modified" files or `$'\r': command not found`
+
+That's Windows line endings. The repo's `.gitattributes` prevents it for new checkouts. To fix an existing checkout:
+
+```bash
+git add --renormalize . && git status
+sed -i 's/\r$//' deploy.sh scripts/*.sh Dockerfile
 ```
 
 ---

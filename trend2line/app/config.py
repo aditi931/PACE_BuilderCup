@@ -4,6 +4,35 @@ from dataclasses import dataclass
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def load_dotenv(path: Path) -> list[str]:
+    """Read KEY=VALUE lines from a local .env into os.environ, without overriding real environment variables.
+
+    Lets the same setup work in Git Bash, PowerShell, cmd, macOS and Linux (no `source .env` needed).
+    Cloud Run never sees a .env (excluded by .gcloudignore/.dockerignore); there, settings come from deploy.sh.
+    """
+    loaded: list[str] = []
+    if not path.is_file():
+        return loaded
+    for raw in path.read_text(encoding="utf-8-sig").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip().removeprefix("export ").strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        elif " #" in value:
+            value = value.split(" #", 1)[0].rstrip()
+        if key and key not in os.environ:
+            os.environ[key] = value
+            loaded.append(key)
+    return loaded
+
+
+DOTENV_LOADED = [] if os.environ.get("T2L_NO_DOTENV") == "1" else load_dotenv(BASE_DIR / ".env")
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "data"))
 STATIC_DIR = BASE_DIR / "static"
 
@@ -45,7 +74,9 @@ def get_settings() -> Settings:
         gemini_auth=auth,
         gcp_project=env("GOOGLE_CLOUD_PROJECT", ""),
         gcp_location=env("GOOGLE_CLOUD_LOCATION", "global"),
-        mock_llm=env("MOCK_LLM", "0") == "1",
+        # MOCK_LLM unset and no credentials at all -> mock, so a fresh clone runs instead of failing at Gemini
+        mock_llm=(env("MOCK_LLM") == "1") if env("MOCK_LLM") is not None
+        else not (env("GOOGLE_API_KEY") or env("GOOGLE_CLOUD_PROJECT")),
         offline=env("OFFLINE", "0") == "1",
         cache_dir=Path(env("CACHE_DIR", "/tmp/t2l_cache")),
         wiki_user_agent=env(

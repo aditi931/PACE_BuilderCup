@@ -6,6 +6,11 @@
 Shows which auth path is used (AI Studio key, Vertex express-mode key "AQ....", or Vertex ADC), lists the
 models your key can see, and makes one tiny structured call with GEMINI_MODEL if it is set.
 """
+import sys as _sys
+
+if hasattr(_sys.stdout, "reconfigure"):  # Windows consoles: print non-English titles safely
+    _sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 from pydantic import BaseModel
 
 from app.config import get_settings

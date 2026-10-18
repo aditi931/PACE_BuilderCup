@@ -81,13 +81,13 @@ def demo_trends() -> list[dict]:
 
 @lru_cache
 def fad_reference() -> dict:
-    return json.loads((DATA_DIR / "fad_reference.json").read_text())
+    return json.loads((DATA_DIR / "fad_reference.json").read_text(encoding="utf-8"))
 
 
 @lru_cache
 def manifest() -> dict:
     p = DATA_DIR / "manifest.json"
-    return json.loads(p.read_text()) if p.exists() else {}
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
 @lru_cache

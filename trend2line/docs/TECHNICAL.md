@@ -43,17 +43,18 @@ Australia's per-nut names work), effective dates (China 2027, Japan cashew 2026)
 ## Run locally
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate   # Git Bash on Windows: source .venv/Scripts/activate
 pip install -r requirements-dev.txt
+cp .env.example .env                          # the app reads .env itself (MOCK_LLM="1" by default)
+python -m scripts.doctor                      # health check with fix hints
 pytest -q                                     # offline, no keys needed
-MOCK_LLM=1 uvicorn app.main:app --reload --port 8080   # live trend data, canned Gemini
+uvicorn app.main:app --reload --port 8080     # live trend data, canned Gemini
 ```
 
 Live Gemini:
 
 ```bash
-cp .env.example .env      # set GOOGLE_API_KEY and GEMINI_MODEL
-set -a && source .env && set +a
+# in .env: set GOOGLE_API_KEY, GEMINI_MODEL and MOCK_LLM="0"
 python -m scripts.smoke_gemini     # shows the auth path and lists the models your key can use
 python -m scripts.smoke_live       # checks Wikipedia, Wikidata and pageviews
 uvicorn app.main:app --reload --port 8080
