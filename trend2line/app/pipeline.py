@@ -31,8 +31,16 @@ def _resolve_article(trend: str, market_langs: list[str], http: trend_stage.Http
                                     mock_context={"title": candidates[0]})
             title = choice.title if choice.title in candidates else candidates[0]
             log("Trend Scout", f"Gemini chose '{title}' from {len(candidates)} {lang} candidates.", "llm")
-        qid = trend_stage.wikidata_qid(http, title, lang)
-        titles = trend_stage.sitelinks(http, qid) if qid else {}
+        try:  # other language editions are a bonus; the article itself is enough to continue
+            qid = trend_stage.wikidata_qid(http, title, lang)
+            titles = trend_stage.sitelinks(http, qid) if qid else {}
+        except Exception as exc:
+            qid, titles = None, {}
+            try:
+                titles = trend_stage.langlinks(http, title, lang)
+                log("Trend Scout", f"Wikidata unavailable ({exc}); read {len(titles)} language links from Wikipedia.")
+            except Exception as exc2:
+                log("Trend Scout", f"Language links unavailable ({exc2}); using {lang} only.")
         titles.setdefault(lang, title)
         return title, qid or "", titles
     raise PipelineError(f"No Wikipedia article found for '{trend}' in {['en'] + market_langs}.")
@@ -63,12 +71,16 @@ def provenance(settings: Settings, plant: dict, spec_source: str, trend_source: 
          "detail": "data/reference_launches.yaml: press releases, trade press and retailer listings, each linked"},
         {"input": "Launches found live", "status": "ai_discovered" if settings.grounding and not settings.offline else "off",
          "detail": "Gemini with Google Search grounding; each row validated by code and linked to web sources"},
-        {"input": "Product spec", "status": spec_source, "detail": "Gemini interprets the trend; code resolves allergens"},
+        {"input": "Product spec", "status": spec_source,
+         "detail": ("Reviewed demo spec (data/demo_trends.yaml); code resolves allergens" if spec_source == "curated_spec"
+                    else "Gemini interprets the trend; code resolves allergens")},
     ]
 
 
 def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes, str] | None,
-        llm: LLM, settings: Settings, plant: dict | None = None, scan: bool = True) -> dict:
+        llm: LLM, settings: Settings, plant: dict | None = None, scan: bool = True, quick: bool = False) -> dict:
+    """quick=True (compare view, opportunity watch): same decision, without live launch discovery or the
+    Gemini write-up, so many runs stay fast and cheap. The verdict never depends on either."""
     t0 = time.time()
     steps: list[dict] = []
     reg = EvidenceRegistry()
@@ -103,7 +115,12 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
     store.prefetch(sorted({lg for ls in (langs_by_market.values() if scan else [langs_by_market[market]]) for lg in ls} | {"en"}))
     sig = signals.market_signal(store, langs_by_market[market], reference)
     if sig["stage"] == "insufficient_data":
-        raise PipelineError(f"Not enough pageview history for '{title}' in {market} or English.")
+        if store.errors:
+            raise PipelineError(f"Wikipedia pageviews could not be read for '{title}': {next(iter(store.errors.values()))}")
+        first = store.first_date()
+        hint = (f" Its pageview history starts on {first}; pick an 'as of' date at least 90 days later."
+                if first and first <= as_of else " The article has no pageviews before the 'as of' date; pick a later date.")
+        raise PipelineError(f"Not enough pageview history for '{title}' in {market} or English.{hint}")
     ev_trend = reg.record("wikimedia_pageviews" if not settings.offline else "synthetic_offline_curve",
                           f"{title} [{market}]", {"article": title, "wikidata": qid, "market": market, **sig})
     log("Trend Scout", f"{market}: stage {sig['stage']}, momentum {sig['momentum_90d']} "
@@ -111,13 +128,21 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
 
     # 2. Product Deconstructor ----------------------------------------------
     step_vocab = catalog.process_steps()
-    spec = llm.structured("deconstruct", prompts.deconstruct(trend, step_vocab, catalog.categories()), ProductSpec,
-                          image=image, mock_context={"trend": trend})
-    spec_source = "mock_llm" if settings.mock_llm else "gemini"
-    if settings.mock_llm and "fallback" in spec.notes.lower():
-        spec_source = "mock_fallback"
-    ev_spec = reg.record("gemini_product_spec" if not settings.mock_llm else "mock_product_spec", trend, spec.model_dump())
-    log("Product Deconstructor", f"{spec.product_name}: {len(spec.ingredients)} ingredients.", "llm")
+    curated = catalog.demo_trend(trend) if image is None else None
+    if curated:  # a demo trend has a spec reviewed by a person: demo verdicts stay reproducible
+        spec = ProductSpec.model_validate({**curated["spec"], "notes": "Reviewed spec from data/demo_trends.yaml."})
+        spec_source = "curated_spec"
+        ev_spec = reg.record("curated_product_spec", trend, spec.model_dump())
+        log("Product Deconstructor", f"{spec.product_name}: reviewed demo spec, {len(spec.ingredients)} ingredients.")
+    else:
+        spec = llm.structured("deconstruct", prompts.deconstruct(trend, step_vocab, catalog.categories()), ProductSpec,
+                              image=image, mock_context={"trend": trend})
+        spec_source = "mock_llm" if settings.mock_llm else "gemini"
+        if settings.mock_llm and "fallback" in spec.notes.lower():
+            spec_source = "mock_fallback"
+        ev_spec = reg.record("gemini_product_spec" if not settings.mock_llm else "mock_product_spec", trend,
+                             spec.model_dump())
+        log("Product Deconstructor", f"{spec.product_name}: {len(spec.ingredients)} ingredients.", "llm")
 
     # 3. BOM Morph (Open Food Facts taxonomy) -------------------------------
     resolved = bom_stage.resolve_spec(spec)
@@ -163,7 +188,7 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
     ref_key, ref_entry = references.match(trend, catalog.reference_launches())
     curated = list((ref_entry or {}).get("launches", []))
     discovered_info = None
-    if settings.grounding and not settings.offline:
+    if settings.grounding and not settings.offline and not quick:
         try:
             discovered_info = discovery.discover(trend, mcfg["markets"], llm, as_of, curated)
             log("Launch Discovery", f"Gemini + Google Search: {len(discovered_info['launches'])} launches accepted, "
@@ -220,7 +245,8 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
 
     # Decision (code, not LLM) -------------------------------------------------
     plant_status = plant.get("provenance", "company_input")
-    own_plant = plant_status in ("company_input", "uploaded_company_input")
+    # demo_company_input: a synthetic company's full plant file, used the way a real company's upload would be
+    own_plant = plant_status in ("company_input", "uploaded_company_input", "demo_company_input")
     sample_plant = plant_status == "sample_company_input"
     hard = []
     if best["free_from_conflicts"] and not sample_plant:
@@ -235,10 +261,11 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
         chosen = bench_route
         basis = (f"observed: median time to market of {bench['n']} real launches "
                  f"({', '.join(bench['companies'])})")
-    elif in_house and not hard and co_man["capture"]["median"] - in_house["capture"]["median"] <= margin:
-        chosen, basis = in_house, ("your plant data" if own_plant else f"{plant_status.replace('_', ' ')} (illustrative)")
     else:
-        chosen, basis = co_man, ("your plant data" if own_plant else f"{plant_status.replace('_', ' ')} (illustrative)")
+        basis = ("plant file of a synthetic demo company" if plant_status == "demo_company_input"
+                 else "your plant data" if own_plant else f"{plant_status.replace('_', ' ')} (illustrative)")
+        use_in_house = in_house and not hard and co_man["capture"]["median"] - in_house["capture"]["median"] <= margin
+        chosen = in_house if use_in_house else co_man
     launch = dt.date.fromisoformat(chosen["launch_date"])
 
     # 6. Compliance for the target market (at the launch date) ---------------
@@ -252,18 +279,24 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
 
     c = chosen["capture"]["median"]
     verdict = "GO" if c >= thresholds["go_capture"] else "CONDITIONAL" if c >= thresholds["conditional_capture"] else "NO-GO"
-    downgrade = [r for r, on in [
+    # Caveats about the data hold for every plan; the last two depend on which plan (route) is chosen.
+    data_caveats = [r for r, on in [
         ("unresolved ingredients need review", bool(bom["unmapped_ingredients"])),
         ("some ingredients matched only approximately", bool(bom["approximate_ingredients"])),
         ("possible allergens flagged for review", bool(bom["allergen_review_flags"])),
         ("process steps outside the known vocabulary", bool(bom["unknown_process_steps"])),
-        ("half-life reference is a placeholder", sig["reference_status"] != "computed"),
+        ("half-life reference is not fully computed", sig["reference_status"] != "computed"),
         ("market interest read from shared English, not the market's own language", sig["basis"] != "own_language"),
         ("product spec is a mock fallback", spec_source == "mock_fallback"),
-        ("time to shelf comes from sample plant data, not real data", chosen["route"] != "observed_benchmark" and not own_plant),
-        ("time to market from launches found with Google Search, not hand-checked",
-         chosen["route"] == "observed_benchmark" and bench_source == "ai_discovered"),
     ] if on]
+
+    def route_caveats(route: str) -> list[str]:
+        return [r for r, on in [
+            ("time to shelf comes from sample plant data, not real data", route != "observed_benchmark" and not own_plant),
+            ("time to market from launches found with Google Search, not hand-checked",
+             route == "observed_benchmark" and bench_source == "ai_discovered"),
+        ] if on]
+    downgrade = data_caveats + route_caveats(chosen["route"])
     if verdict == "GO" and (hard or downgrade):
         verdict = "CONDITIONAL"
     go_days = deadline["go_by_days"]["median"] if deadline["go_by_days"] else None
@@ -277,6 +310,26 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
                 "faster_line_blocked": ({"line": blocked_route["line"], "total_days": blocked_route["total_days"],
                                          "blocked_by": blocked_route["blocked_by"]} if blocked_route else None)}
     ev_decision = reg.record("decision_rules", "timeline.yaml thresholds", decision)
+
+    # What-if simulator: every plan the company could pick, timed here by the same task graph. The browser only
+    # re-applies capture = 0.5 ** (T / h) and the thresholds above after the user shifts days or fad speed.
+    def option(oid: str, label: str, r: dict, line: dict | None) -> dict:
+        conflicts = sorted({f"{x['sku_name']}: {x['claim_label']}" for x in (line or {}).get("free_from_conflicts", [])})
+        return {"id": oid, "label": label, "route": r["route"], "line": r["line"], "total_days": r["total_days"],
+                "gaps": [g["step"] for g in (line or {}).get("gaps", [])],
+                "gap_days": (line or {}).get("gap_lead_days", 0),
+                "new_allergens": (line or {}).get("new_allergens_on_line", []),
+                "conflicts": conflicts, "hard": bool(conflicts) and not sample_plant,
+                "caveats": data_caveats + route_caveats(r["route"])}
+    options = [option("co_manufacturer", "Co-manufacturer", co_man, None)]
+    options += [option(f"in_house:{a['line_id']}", f"In-house · {a.get('line_name') or a['line_id']}",
+                       route_eval("in_house", a), a) for a in ranked if a["feasible"]]
+    if bench_route:
+        options.append(option("observed_benchmark", "Real companies' observed pace", bench_route, None))
+    chosen_id = f"in_house:{chosen['line']}" if chosen["route"] == "in_house" else chosen["route"]
+    simulator = {"options": options, "chosen": chosen_id, "half_life_days": hl, "sustained": sustained,
+                 "go_capture": thresholds["go_capture"], "conditional_capture": thresholds["conditional_capture"],
+                 "official_hard_failures": hard}
     log("Decision", f"{verdict} via {chosen['route']} (capture {c}).")
 
     # 7. Market scan ---------------------------------------------------------
@@ -323,7 +376,7 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
              "decision": decision,
              "top_markets": [r["market"] for r in scan_rows[:3]]}
     attempts, feedback, plan, ver = [], None, None, None
-    for attempt in range(1, settings.max_writer_attempts + 1):
+    for attempt in range(1, 0 if quick else settings.max_writer_attempts + 1):
         plan = llm.structured("write_plan", prompts.write_plan(state, reg.for_prompt(), feedback), Plan,
                               mock_context={"attempt": attempt, "reg": reg, "state": state, "plant": plant})
         ver = verify(plan, reg, plant, comp, bom)
@@ -342,6 +395,10 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
     mode = "offline" if settings.offline else ("mock_llm" if settings.mock_llm else "live")
     return {
         "mode": mode,
+        "as_of": as_of.isoformat(),
+        "quick": quick,
+        "trend_input": trend,
+        "evidence_index": state["evidence_index"],
         "trend": sig | {"article": title, "wikidata": qid, "source": trend_source,
                         "editions_available": sorted(titles)},
         "spec": spec.model_dump(),
@@ -350,6 +407,7 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
         "allergen_blast_radius": blast,
         "compliance": comp,
         "routes": routes,
+        "simulator": simulator,
         "shelf_deadline": deadline,
         "reference_launches": ref_rows,
         "reference_windows": ref_windows,

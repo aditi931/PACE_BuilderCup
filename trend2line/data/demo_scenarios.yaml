@@ -1,0 +1,47 @@
+# Ready-made demo combinations, one per verdict. Shown as cards in the UI ("Demo scenarios").
+# Nothing here is a stored answer: every verdict is recomputed live from real Wikipedia pageviews, the reviewed
+# product spec in data/demo_trends.yaml, the synthetic demo company plant (data/companies/) and the market rules.
+# `expected` is what the real data gave when these were chosen (computed 2026-10-18); a test checks the inputs exist.
+scenarios:
+  - label: Positive
+    expected: GO
+    title: Hanbit Foods rides Korea's tanghulu wave
+    trend: Tanghulu
+    company: hanbit_foods
+    sku_id: HB-HOBAKYEOT-80
+    market: KR
+    as_of: 2023-08-01
+    story: >-
+      Interest is rising in Korean Wikipedia and fades slowly (83-day half-life). The candy line already has a
+      kettle, cooling tunnel and tray sealer, the product adds no allergens and the label is already Korean:
+      on shelf in 41 days with about 71% of today's interest left.
+    covers: [rising trend, own-language market signal, in-house line with no gaps, no new allergens, no blast radius,
+             days to spare]
+
+  - label: Neutral
+    expected: CONDITIONAL
+    title: Kaveri Dairy eyes Dubai chocolate for India
+    trend: Dubai chocolate
+    company: kaveri_dairy
+    sku_id: KV-KULFI-PISTA-60
+    market: IN
+    as_of: 2025-04-15
+    story: >-
+      Demand is strong and still rising (about 63% of interest left via a 55-day co-packer route), but Kaveri has
+      no chocolate line, and the best in-house line would void nut-free and gluten-free claims on existing products.
+      Go only through a co-manufacturer or a segregated line.
+    covers: [real launches by real companies (Läderach, ITC Fabelle, Cadbury), co-manufacturer route,
+             allergen blast radius as a hard constraint, Indian labelling rules]
+
+  - label: Negative
+    expected: NO-GO
+    title: Hanbit Foods is too late for Dalgona coffee
+    trend: Dalgona coffee
+    company: hanbit_foods
+    sku_id: HB-MILKCHOC-45
+    market: KR
+    as_of: 2020-07-01
+    story: >-
+      A flash fad already decaying (24-day half-life). Hanbit has no beverage line, so only a co-packer can make
+      it, in 55 days: about a month past the shelf deadline, with roughly 20% of today's interest left.
+    covers: [flash fad, decaying interest, missing capability, co-manufacturer only, days too late]

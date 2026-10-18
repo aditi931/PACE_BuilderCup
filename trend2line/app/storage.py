@@ -14,6 +14,7 @@ import uuid
 from pathlib import Path
 
 COLLECTION = "trend2line_runs"
+WATCH_COLLECTION = "trend2line_watch"
 
 
 def _summary(result: dict, run_id: str) -> dict:
@@ -47,6 +48,13 @@ class LocalStore:
             return None
         return json.loads(gzip.decompress(p.read_bytes()))
 
+    def save_watch(self, watch: dict) -> None:
+        (self.dir / "watch_latest.json").write_text(json.dumps(watch, default=str), encoding="utf-8")
+
+    def get_watch(self) -> dict | None:
+        p = self.dir / "watch_latest.json"
+        return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
+
 
 class FirestoreStore:
     kind = "firestore"
@@ -75,6 +83,14 @@ class FirestoreStore:
         if not doc.exists:
             return None
         return json.loads(gzip.decompress(doc.to_dict()["result_gz"]))
+
+    def save_watch(self, watch: dict) -> None:
+        blob = gzip.compress(json.dumps(watch, default=str).encode())
+        self.db.collection(WATCH_COLLECTION).document("latest").set({"ran_at": watch["ran_at"], "watch_gz": blob})
+
+    def get_watch(self) -> dict | None:
+        doc = self.db.collection(WATCH_COLLECTION).document("latest").get()
+        return json.loads(gzip.decompress(doc.to_dict()["watch_gz"])) if doc.exists else None
 
 
 _STORE = None

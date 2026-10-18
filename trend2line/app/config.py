@@ -35,6 +35,8 @@ def load_dotenv(path: Path) -> list[str]:
 DOTENV_LOADED = [] if os.environ.get("T2L_NO_DOTENV") == "1" else load_dotenv(BASE_DIR / ".env")
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR / "data"))
 STATIC_DIR = BASE_DIR / "static"
+# Public page that identifies this client to Wikimedia and Open Food Facts (their robot policies require one)
+CONTACT_URL = "https://pace-buildercup-241790677133.asia-south1.run.app"
 
 
 @dataclass(frozen=True)
@@ -54,6 +56,8 @@ class Settings:
     grounding: bool            # Gemini + Google Search to discover real launches (live mode)
     bigquery: bool             # BigQuery Google Trends radar
     bq_max_gb: float           # hard cap on bytes billed per BigQuery query
+    watch_token: str = ""      # shared secret Cloud Scheduler sends to POST /api/watch/run
+    on_cloud_run: bool = False
 
     @property
     def resolved_auth(self) -> str:
@@ -83,17 +87,25 @@ def get_settings() -> Settings:
         else not (env("GOOGLE_API_KEY") or env("GOOGLE_CLOUD_PROJECT")),
         offline=env("OFFLINE", "0") == "1",
         cache_dir=Path(env("CACHE_DIR", "/tmp/t2l_cache")),
-        wiki_user_agent=env(
-            "WIKI_USER_AGENT",
-            "Trend2Line/0.2 (AI Builder Cup prototype; set WIKI_USER_AGENT with a contact email)",
-        ),
+        wiki_user_agent=user_agent_with_contact(env("WIKI_USER_AGENT", ""), env("WIKI_CONTACT_URL", CONTACT_URL)),
         max_writer_attempts=int(env("MAX_WRITER_ATTEMPTS", "3")),
         http_cache_hours=float(env("HTTP_CACHE_HOURS", "12")),
         run_store=_run_store(env("RUN_STORE", "auto"), env("GOOGLE_CLOUD_PROJECT", ""), env("K_SERVICE", "")),
         grounding=env("ENABLE_GROUNDING", "1") == "1",
         bigquery=env("ENABLE_BIGQUERY", "1") == "1",
         bq_max_gb=float(env("BQ_MAX_GB", "20")),
+        watch_token=env("WATCH_TOKEN", ""),
+        on_cloud_run=bool(env("K_SERVICE", "")),
     )
+
+
+def user_agent_with_contact(ua: str, contact: str) -> str:
+    """Wikimedia (403) and Open Food Facts reject user agents without contact details. Keep a UA that has a
+    URL or email; otherwise add the contact URL, so a bare 'Trend2Line/0.3 (Cloud Run)' can never be blocked."""
+    ua = ua.strip() or "Trend2Line/0.4"
+    if "http" in ua or "@" in ua:
+        return ua
+    return f"{ua} (+{contact})"
 
 
 def _run_store(value: str, project: str, k_service: str) -> str:

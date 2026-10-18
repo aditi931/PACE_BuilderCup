@@ -14,7 +14,9 @@ def _close(a: float, b: float) -> bool:
 
 
 def _matches(value: float, target: float) -> bool:
-    return _close(value, target) or (abs(target) <= 1 and _close(value, target * 100))
+    """A share (0..1) may be written as a percentage, rounded to a whole number: 0.204 -> '20%'."""
+    return _close(value, target) or (abs(target) <= 1 and (_close(value, target * 100)
+                                                           or (abs(value) >= 1 and abs(value - target * 100) <= 0.5)))
 
 
 def check_claim(c, reg: EvidenceRegistry, plant: dict, compliance: dict) -> tuple[str, str, bool]:
@@ -76,7 +78,7 @@ def verify(plan: Plan, reg: EvidenceRegistry, plant: dict, compliance: dict, bom
     orphans = []
     for m in NUM_RE.finditer(prose):
         n = float(m.group(1))
-        if not any(_close(n, a) or (a <= 1 and _close(n, a * 100)) for a in allowed):
+        if not any(_matches(n, a) for a in allowed):
             orphans.append({"text": m.group(0), "status": "failed",
                             "reason": "Number in prose without a verified claim behind it."})
 

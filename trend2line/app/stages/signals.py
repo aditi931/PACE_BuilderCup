@@ -48,6 +48,7 @@ class SeriesStore:
         self.http, self.titles, self.trend, self.as_of, self.offline = http, titles, trend, as_of, offline
         self.start = as_of - dt.timedelta(days=3 * 365)
         self.cache: dict[str, T.Series] = {}
+        self.errors: dict[str, str] = {}
 
     def prefetch(self, langs: list[str]) -> None:
         todo = [lg for lg in dict.fromkeys(langs) if lg not in self.cache]
@@ -65,8 +66,13 @@ class SeriesStore:
             return []
         try:
             return T.fetch_pageviews(self.http, title, self.start, self.as_of, lang)
-        except Exception:
+        except Exception as exc:  # one edition failing must not sink the run, but say why if all do
+            self.errors[lang] = str(exc)
             return []
+
+    def first_date(self) -> dt.date | None:
+        dates = [s[0][0] for s in self.cache.values() if s]
+        return min(dates) if dates else None
 
     def get(self, lang: str) -> T.Series:
         if lang not in self.cache:

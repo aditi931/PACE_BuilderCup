@@ -2,7 +2,8 @@
 
 Mock mode exists only for automated tests (MOCK_LLM=1); production runs call Gemini for real.
 
-Runtime AI is Gemini only. Never add another model provider here (see CLAUDE.md).
+Runtime AI is Gemini only. Never add another model provider here (see docs/TECHNICAL.md,
+"Engineering rules"; scripts/check_gemini_only.sh enforces it at deploy time).
 """
 import hashlib
 from typing import Any, Callable, TypeVar

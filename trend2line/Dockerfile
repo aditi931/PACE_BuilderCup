@@ -11,7 +11,7 @@ COPY static ./static
 # Wikimedia pageviews, and build real company profiles from Open Food Facts. If a source is down, the committed copies in data/ are kept and the build continues.
 # Skip with: --build-arg REFRESH_DATA=0
 ARG REFRESH_DATA=1
-ARG WIKI_USER_AGENT="Trend2Line/0.2 (Cloud Build; set WIKI_USER_AGENT with a contact email)"
+ARG WIKI_USER_AGENT="Trend2Line/0.4 (Cloud Build; +https://pace-buildercup-241790677133.asia-south1.run.app)"
 RUN if [ "$REFRESH_DATA" = "1" ]; then \
       python -m scripts.refresh_data || echo "refresh_data: kept committed copies"; \
       WIKI_USER_AGENT="$WIKI_USER_AGENT" CACHE_DIR=/tmp/build_cache python -m scripts.build_fad_reference \

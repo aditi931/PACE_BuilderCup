@@ -1,9 +1,10 @@
-# Example trends from different regions and categories. Used for the UI picker, offline tests, and as canned
+# Example trends from different regions and categories. Each suggested_as_of is at least 90 days after the
+# market's Wikipedia article has pageviews (otherwise there is no curve to read). Used for the UI picker, offline tests, and as canned
 # Gemini output when MOCK_LLM=1. In live mode Gemini produces the product spec for ANY trend typed in.
 trends:
   - trend: Dubai chocolate
     origin: United Arab Emirates
-    suggested_as_of: 2025-03-01
+    suggested_as_of: 2025-04-15   # en article starts 2024-11-29
     suggested_market: GCC
     spec:
       product_name: Milk chocolate bar with pistachio cream and toasted kataifi
@@ -22,7 +23,7 @@ trends:
       process_steps: [tempering, shell_moulding, toasting, filling_deposit, backing_off, cooling, demoulding, wrapping]
   - trend: Dalgona coffee
     origin: South Korea
-    suggested_as_of: 2020-04-05
+    suggested_as_of: 2020-07-01   # en article starts 2020-04-01; 90 days of history needed
     suggested_market: IN
     spec:
       product_name: Ready-to-drink whipped coffee with milk
@@ -36,7 +37,7 @@ trends:
       process_steps: [mixing, pasteurisation, homogenisation, liquid_filling]
   - trend: Croffle
     origin: South Korea
-    suggested_as_of: 2021-03-01
+    suggested_as_of: 2022-04-01   # ko article starts 2021-11-13
     suggested_market: KR
     spec:
       product_name: Croissant-dough waffle with caramelised sugar
@@ -52,7 +53,7 @@ trends:
       process_steps: [dough_mixing, sheeting_laminating, proofing, baking, cooling, wrapping]
   - trend: Tanghulu
     origin: China
-    suggested_as_of: 2023-09-01
+    suggested_as_of: 2023-08-01
     suggested_market: KR
     spec:
       product_name: Candied fruit skewers with a hard sugar shell
@@ -84,7 +85,7 @@ trends:
       process_steps: [battering, frying, freezing, tray_sealing]
   - trend: Maritozzo
     origin: Italy
-    suggested_as_of: 2021-08-01
+    suggested_as_of: 2021-09-01   # ja article starts 2021-04-28
     suggested_market: JP
     spec:
       product_name: Sweet brioche bun filled with whipped cream

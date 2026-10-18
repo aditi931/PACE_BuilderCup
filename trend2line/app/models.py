@@ -48,3 +48,21 @@ class Plan(BaseModel):
     rationale: str
     actions: list[str]
     claims: list[Claim]
+
+
+class LabelTerm(BaseModel):
+    declaration: str = Field(description="Copied exactly from mandatory_declarations")
+    local_term: str = Field(description="The term printed on the label, in the target language")
+
+
+class LabelDraft(BaseModel):
+    product_name_local: str
+    ingredients_statement: str
+    allergen_terms: list[LabelTerm]
+    allergen_statement: str = Field(description="The 'Contains: ...' statement, with every local_term verbatim")
+    back_translation: str = Field(description="English translation of both statements, for the reviewer")
+
+
+class Answer(BaseModel):
+    answer: str
+    claims: list[Claim]
