@@ -7,13 +7,25 @@ Real open data for trends (multilingual Wikipedia), ingredients and allergens (O
 deterministic verdict; a Gemini write-up that is checked claim by claim. Factory data is sample input that a
 company replaces with its own.
 
+## Demo script (real companies)
+
+1. Pick **Cadbury (India)** in the Company menu, trend **Dubai chocolate**, market **India**, today's date.
+2. Show the deadline, then **Real-world evidence**: the trend's TikTok origin, India's interest window, and where
+   Läderach, Fabelle and Cadbury launched on it. Real time to market drives the verdict.
+3. Show the allergen blast radius across Cadbury's real products, and India's labelling.
+4. Switch the market to the Gulf: Arabic label, the "Dubai" origin-claim check, sesame.
+5. Show the model check and the Lindt pack validation as proof the engine matches reality.
+6. Hand judges the case-study report from `scripts.case_study`.
+
 ## Before the demo (days)
 
 1. Deploy once so Cloud Build computes `data/fad_reference.json` from real pageviews; this lifts the CONDITIONAL cap.
 2. Have a regulatory person confirm every `needs_review` rule, starting with the Gulf (GSO 9:2022, GSO 2810:2025)
    and the EU/US gluten-free and origin-claim rules. Flip their status in `data/markets.yaml`.
-3. Ask a production person for realistic line capabilities, lead times and durations for one plant.
-4. Rehearse three contrasting runs: Dubai chocolate for the Gulf (origin claim, Arabic label, sesame),
+3. Run `scripts.build_company_profile --all` and `scripts.case_study` with internet access and check the numbers.
+4. Add real launches for one or two more trends (e.g. Dalgona coffee, Tanghulu) in `data/reference_launches.yaml`,
+   each with a source.
+5. Rehearse three contrasting runs: Dubai chocolate for the Gulf (origin claim, Arabic label, sesame),
    Croffle for Korea (the bakery line would void an egg-free claim), and Dalgona coffee for India.
 
 ## Better demand signals (weeks)

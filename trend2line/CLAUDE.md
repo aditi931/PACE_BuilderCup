@@ -21,5 +21,6 @@ When unsure about a Google API, ask for the current docs page instead of guessin
 ## Working agreements
 - Keep `pytest -q` green. Add a test for every new deterministic rule.
 - Every new tool output goes through EvidenceRegistry.record(); every new claim kind needs a verifier check.
-- OFFLINE=1 (no network) and MOCK_LLM=1 (canned Gemini, live data) must keep working.
+- Production is live: Gemini on Vertex AI (service account), Google Search grounding, BigQuery, Firestore.
+- OFFLINE=1 and MOCK_LLM=1 are test switches only and must keep working for pytest.
 - Nothing market-, product- or plant-specific in app/: it belongs in data/. Every regulation row needs a source URL and status.

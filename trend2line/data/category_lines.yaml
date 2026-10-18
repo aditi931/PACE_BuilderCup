@@ -1,0 +1,48 @@
+# Used ONLY by scripts/build_company_profile.py to group a real company's public products into INFERRED lines.
+# A company's real lines are not public; these are generic capabilities for each product category, labelled
+# "inferred" everywhere they appear. First matching group wins (so specific groups come first).
+groups:
+  - {id: FROZEN, name: "Ice cream and frozen desserts (inferred)", category: frozen,
+     match: [en:ice-creams, en:frozen-desserts, en:ice-cream-tubs],
+     capabilities: [high_shear_mixing, pasteuriser, homogeniser, continuous_freezer, cup_filler_sealer],
+     steps: [mixing, pasteurisation, homogenisation, ice_cream_freezing, cup_filling]}
+  - {id: CHOC, name: "Chocolate (inferred)", category: confectionery,
+     match: [en:chocolates, en:chocolate-candies, en:filled-chocolates, en:chocolate-bars],
+     capabilities: [tempering, solid_moulding, cooling_tunnel, flow_wrap],
+     steps: [tempering, solid_moulding, cooling, demoulding, wrapping]}
+  - {id: BISC, name: "Biscuits and wafers (inferred)", category: bakery,
+     match: [en:biscuits, en:cookies, en:wafers, en:crackers],
+     capabilities: [dough_mixer, oven, cooling_tunnel, flow_wrap],
+     steps: [dough_mixing, baking, cooling, wrapping]}
+  - {id: BAKE, name: "Bread, cakes and pastries (inferred)", category: bakery,
+     match: [en:breads, en:cakes, en:viennoiseries, en:pastries, en:croissants],
+     capabilities: [dough_mixer, laminator, proofer, oven, cooling_tunnel, flow_wrap],
+     steps: [dough_mixing, proofing, baking, cooling, wrapping]}
+  - {id: DRINK, name: "Milk drinks and beverages (inferred)", category: dairy_beverage,
+     match: [en:dairy-drinks, en:milks, en:flavoured-milks, en:beverages, en:yogurts, en:fermented-milk-products],
+     capabilities: [high_shear_mixing, pasteuriser, homogeniser, liquid_filler, cup_filler_sealer],
+     steps: [mixing, pasteurisation, homogenisation, liquid_filling]}
+  - {id: SNACK, name: "Salty snacks (inferred)", category: snacks,
+     match: [en:salty-snacks, en:chips-and-fries, en:crisps, en:appetizers, en:extruded-snacks],
+     capabilities: [fryer, extruder, seasoning_drum, vffs],
+     steps: [frying, seasoning, wrapping]}
+  - {id: SWEET, name: "Other confectionery (inferred)", category: confectionery,
+     match: [en:confectioneries, en:candies, en:sweets],
+     capabilities: [cooking_kettle, cooling_tunnel, flow_wrap],
+     steps: [cooking_kettle, cooling, wrapping]}
+
+# Open Food Facts label tags that mean a free-from claim on the pack
+free_from_labels:
+  en:gluten-free: gluten_free
+  en:no-gluten: gluten_free
+  en:nut-free: nut_free
+  en:no-nuts: nut_free
+  en:peanut-free: peanut_free
+  en:no-milk: dairy_free
+  en:dairy-free: dairy_free
+  en:no-lactose-and-milk: dairy_free
+  en:egg-free: egg_free
+  en:no-eggs: egg_free
+  en:vegan: [dairy_free, egg_free]
+  en:soy-free: soy_free
+  en:no-soy: soy_free

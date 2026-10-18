@@ -1,0 +1,78 @@
+# REAL launches of trend products by real companies, from public sources (press releases, trade press, retailer
+# listings, product packs). Used to show where real launches landed on the live interest curve.
+# Only public facts are stored; nothing here describes a company's internal plant data.
+# `date_basis` says what the date means; dates are as reported by the source, not verified with the company.
+# Researched 2026-10-17. Add launches for any trend by adding entries.
+
+trends:
+  dubai_chocolate:
+    match: [dubai chocolate, dubai style chocolate, kunafa chocolate, knafeh chocolate, pistachio kunafa chocolate]
+    origin:
+      company: FIX Dessert Chocolatier
+      product: "Can't Get Knafeh of It"
+      market: GCC
+      date: 2023-12-19
+      event: TikTok video by Maria Vehera that started the global trend
+      source_title: "The Daily Meal: The viral Dubai chocolate bar, explained"
+      source_url: "https://www.thedailymeal.com/1674281/viral-dubai-chocolate-bar-explained"
+    launches:
+      - company: Lindt & Sprüngli
+        brand: Lindt
+        product: Dubai Chocolate limited release (300 bars, sold out in a day)
+        market: US
+        date: 2024-12-01
+        date_basis: "month only (December 2024); first day of the month used"
+        positioning: limited test release, New York City
+        source_title: "Smithsonian Magazine: the TikTok-famous Dubai chocolate"
+        source_url: "https://www.smithsonianmag.com/travel/the-tiktok-famous-dubai-chocolate-traces-its-origins-to-the-13th-century-middle-east-180986367/"
+
+      - company: DS Group (Läderach India)
+        brand: Läderach
+        product: FrischSchoggi Dubai
+        market: IN
+        date: 2025-03-24
+        date_basis: in-store availability date in the announcement
+        positioning: luxury import, three stores (Delhi, Mumbai)
+        source_title: "FoodTechBiz: DS Group unveils Läderach's FrischSchoggi Dubai in India"
+        source_url: "https://www.foodtechbiz.com/product-launches/ds-group-unveils-lderachs-global-sensation-frischschoggi-dubai-in-india"
+
+      - company: ITC Limited
+        brand: Fabelle
+        product: Kunafa Chocolate Collection (milk pistachio, dark pistachio, dark pecan)
+        market: IN
+        date: 2025-10-17
+        date_basis: trade-press announcement date
+        positioning: premium domestic, boutiques in 8 cities plus delivery apps
+        source_title: "Mediainfoline: Fabelle by ITC introduces Kunafa-inspired chocolate"
+        source_url: "https://www.mediainfoline.com/uncategorized/fabelle-by-itc-introduces-kunafa-inspired-chocolate"
+
+      - company: Mondelez India
+        brand: Cadbury Dairy Milk Silk
+        product: Dubai Chocolate (limited edition, Rs 550)
+        market: IN
+        date: 2026-06-18
+        date_basis: trade-press announcement date
+        positioning: mass market, quick-commerce and retail nationwide
+        source_title: "FoodTechBiz: Cadbury Dairy Milk Silk introduces limited edition Dubai Chocolate"
+        source_url: "https://www.foodtechbiz.com/product-launches/cadbury-dairy-milk-silk-introduces-limited-edition-dubai-chocolate"
+
+      - company: Lindt & Sprüngli
+        brand: Lindt
+        product: Dubai Style Chocolate Dark 145 g
+        market: EU
+        date: 2025-08-18
+        date_basis: release date on a Swiss retailer listing (the milk version was sold earlier; its date is not confirmed here)
+        positioning: premium mass market, Europe and the US
+        made_in: "Lindt & Sprüngli GmbH, Aachen, Germany (as printed on US packs)"
+        source_title: "Galaxus product listing: Lindt Dubai Style Chocolate Dark"
+        source_url: "https://www.galaxus.ch/en/s7/product/lindt-dubai-style-chocolate-dark-145-g-chocolate-61149998"
+        # Real pack data for the milk version, used to test the allergen engine against what Lindt declares.
+        pack:
+          ingredients: [whole milk powder, cocoa butter, sugar, cocoa mass, lactose, skim milk powder, soy lecithin,
+                        barley malt extract, pistachios, anhydrous milk fat, wheat flour, corn starch, sunflower oil,
+                        salt, almonds, hazelnuts, invert sugar syrup]
+          declared_contains: [pistachio, hazelnut, almond, wheat, barley, soybean, milk, tree nuts]
+          ingredients_source: "https://shop.frankfurt-airport.com/en-US/product/lindt-dubai-style-milk-chocolate-bar-filled-with-pistachio-paste-and-kadayif_71e2e9fe6080177e"
+          contains_source: "https://hme.heinemann-shop.com/en/global/lindt/lindt-dubai-style-milchschokoladenpralinen-mit-pistazien-engelshaar-fuellung/p/000000000001740663/"
+          may_contain_white_version: [other nuts, peanuts, sesame seeds, other cereals containing gluten]
+          may_contain_source: "https://fengany.com/products/lindt-dubai-style-white-chocolate-weiss-145g-copy"

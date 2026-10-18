@@ -112,13 +112,17 @@ class Taxonomy:
         self.allergen_nodes = parse_taxonomy(allergens_path)
         self.index: dict[str, str] = {}
         self.index_lang: dict[str, str] = {}
-        for nid, node in self.nodes.items():
-            for lang in sorted(node.names, key=lambda l: (l not in ("en", "xx"), l)):
-                for name in node.names[lang]:
-                    key = norm(name)
-                    if key and key not in self.index:
-                        self.index[key] = nid
-                        self.index_lang[key] = lang
+        # two passes: English/universal names win over every other language, across all nodes
+        for english_pass in (True, False):
+            for nid, node in self.nodes.items():
+                for lang in sorted(node.names):
+                    if (lang in ("en", "xx")) != english_pass:
+                        continue
+                    for name in node.names[lang]:
+                        key = norm(name)
+                        if key and key not in self.index:
+                            self.index[key] = nid
+                            self.index_lang[key] = lang
         for node in self.nodes.values():
             for lang, name in node.parent_refs:
                 pid = self.index.get(norm(name))
@@ -186,8 +190,14 @@ class Taxonomy:
         key = norm(text)
         if not key:
             return None, "unresolved"
-        if key in self.index:
+        english = ("en", "xx")
+        if key in self.index and self.index_lang[key] in english:
             return self.index[key], "exact"
+        for v in self._variants(key):  # English singular/plural beats an exact hit in another language
+            if v != key and v in self.index and self.index_lang[v] in english:
+                return self.index[v], "variant"
+        if key in self.index:
+            return self.index[key], "other_language"
         if nid := self._known(key):
             return nid, "variant"
         return None, "unresolved"
@@ -245,10 +255,7 @@ class Taxonomy:
         else:
             nid, quality = self.lookup(name)
             if nid:
-                res = self._result(name, [nid], quality)
-                # a match found only in another language is a guess, not a match
-                if quality == "exact" and self.index_lang.get(key) not in ("en", "xx"):
-                    res["match"] = "other_language"
+                res = self._result(name, [nid], quality)  # "other_language" = a guess, flagged downstream
             elif parts := self.spans(name):
                 res = self._result(name, [i for _, ids in parts for i in ids], "partial")
                 res["matched_spans"] = [p for p, _ in parts]

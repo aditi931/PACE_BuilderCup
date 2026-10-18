@@ -50,6 +50,10 @@ class Settings:
     wiki_user_agent: str
     max_writer_attempts: int
     http_cache_hours: float
+    run_store: str             # firestore | local | off   (auto: firestore on Cloud Run with a project)
+    grounding: bool            # Gemini + Google Search to discover real launches (live mode)
+    bigquery: bool             # BigQuery Google Trends radar
+    bq_max_gb: float           # hard cap on bytes billed per BigQuery query
 
     @property
     def resolved_auth(self) -> str:
@@ -85,4 +89,15 @@ def get_settings() -> Settings:
         ),
         max_writer_attempts=int(env("MAX_WRITER_ATTEMPTS", "3")),
         http_cache_hours=float(env("HTTP_CACHE_HOURS", "12")),
+        run_store=_run_store(env("RUN_STORE", "auto"), env("GOOGLE_CLOUD_PROJECT", ""), env("K_SERVICE", "")),
+        grounding=env("ENABLE_GROUNDING", "1") == "1",
+        bigquery=env("ENABLE_BIGQUERY", "1") == "1",
+        bq_max_gb=float(env("BQ_MAX_GB", "20")),
     )
+
+
+def _run_store(value: str, project: str, k_service: str) -> str:
+    """auto -> Firestore when running on Cloud Run (K_SERVICE is set there) with a project; else local files."""
+    if value != "auto":
+        return value
+    return "firestore" if (project and k_service) else "local"

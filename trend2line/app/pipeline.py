@@ -5,10 +5,10 @@ import time
 from . import prompts
 from .config import Settings
 from .evidence import EvidenceRegistry
-from .llm import LLM
+from .llm import LLM, LLMError
 from .models import ArticleChoice, Plan, ProductSpec
 from .stages import bom as bom_stage
-from .stages import catalog, compliance as compliance_stage, feasibility, signals, timeline
+from .stages import catalog, compliance as compliance_stage, discovery, feasibility, references, signals, timeline
 from .stages import trend as trend_stage
 from .stages.verifier import feedback_for_writer, verify
 
@@ -59,6 +59,10 @@ def provenance(settings: Settings, plant: dict, spec_source: str, trend_source: 
         {"input": "Timeline durations and equipment lead times", "status": catalog.timeline_cfg().get("provenance", "company_input"),
          "detail": "data/timeline.yaml, data/equipment_catalog.csv"},
         {"input": "Market scan weights", "status": "company_input", "detail": "data/scoring.yaml"},
+        {"input": "Real reference launches", "status": "real_public_record",
+         "detail": "data/reference_launches.yaml: press releases, trade press and retailer listings, each linked"},
+        {"input": "Launches found live", "status": "ai_discovered" if settings.grounding and not settings.offline else "off",
+         "detail": "Gemini with Google Search grounding; each row validated by code and linked to web sources"},
         {"input": "Product spec", "status": spec_source, "detail": "Gemini interprets the trend; code resolves allergens"},
     ]
 
@@ -155,6 +159,35 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
         log("Shelf Deadline", f"On shelf within {deadline['go_by_days']['median']} days "
                               f"(by {deadline['go_by_date']['median']}) to keep {round(deadline['go_share'] * 100)}% of interest.")
 
+    # Real reference launches: curated (hand-checked) + discovered live with Gemini + Google Search
+    ref_key, ref_entry = references.match(trend, catalog.reference_launches())
+    curated = list((ref_entry or {}).get("launches", []))
+    discovered_info = None
+    if settings.grounding and not settings.offline:
+        try:
+            discovered_info = discovery.discover(trend, mcfg["markets"], llm, as_of, curated)
+            log("Launch Discovery", f"Gemini + Google Search: {len(discovered_info['launches'])} launches accepted, "
+                                    f"{len(discovered_info['rejected'])} rejected by code checks, "
+                                    f"{len(discovered_info['grounding_sources'])} web sources.", "llm")
+        except LLMError as exc:
+            log("Launch Discovery", f"skipped: {exc}", "llm")
+    found = (discovered_info or {}).get("launches", [])
+    ref_rows, ref_windows, bench, mcheck, bench_source = [], {}, None, [], None
+    if curated or found:
+        entry = {"origin": (ref_entry or {}).get("origin"), "launches": curated + found}
+        if not entry["origin"]:
+            entry.pop("origin")
+        ref_rows, ref_windows = references.evaluate(entry, store, langs_by_market, as_of)
+        bench = references.benchmark([r for r in ref_rows if r.get("verification") != "ai_discovered"])
+        bench_source = "curated" if bench else None
+        if not bench:
+            bench = references.benchmark(ref_rows)
+            bench_source = "ai_discovered" if bench else None
+        mcheck = references.model_check(ref_windows, reference)
+        ref_key = ref_key or trend
+        log("Reference Launches", f"{len(ref_rows)} real launches ({len(found)} found live); observed time to market "
+                                  f"{'median ' + str(bench['median']) + ' days from ' + str(bench['n']) + ' launches' if bench else 'not enough data'}.")
+
     def route_eval(route: str, line: dict | None) -> dict:
         tasks = timeline.build_route(route, cfg, line["gap_lead_days"] if line else 0,
                                      bool(line and line["needs_cleaning_validation"]), needs_l10n)
@@ -175,21 +208,37 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
         blocked = route_eval("in_house_blocked", fastest)
         blocked["blocked_by"] = sorted({f"{c['sku_name']}: {c['claim_label']}" for c in fastest["free_from_conflicts"]})
         routes.append(blocked)
+    if bench:  # real companies' observed time to market replaces sample durations
+        days = int(round(bench["median"]))
+        routes.append({"route": "observed_benchmark", "line": None, "total_days": days,
+                       "critical_path": ["observed_time_to_market"],
+                       "tasks": [{"task": "observed_time_to_market", "start_day": 0, "end_day": days,
+                                  "duration_days": days, "critical": True}],
+                       "launch_date": timeline.launch_date(as_of, days), "based_on": bench,
+                       "capture": {k: (1.0 if sustained else trend_stage.capture_share(days, v)) for k, v in hl.items()}})
     route_ids = {r["route"]: reg.record("timeline", r["route"], r) for r in routes}
 
     # Decision (code, not LLM) -------------------------------------------------
+    plant_status = plant.get("provenance", "company_input")
+    own_plant = plant_status in ("company_input", "uploaded_company_input")
+    sample_plant = plant_status == "sample_company_input"
     hard = []
-    if best["free_from_conflicts"]:
+    if best["free_from_conflicts"] and not sample_plant:
         hard.append(f"Best in-house line {best['line_id']} would void free-from claims.")
     thresholds = cfg["decision"]
     in_house = next((r for r in routes if r["route"] == "in_house"), None)
     co_man = next(r for r in routes if r["route"] == "co_manufacturer")
     blocked_route = next((r for r in routes if r["route"] == "in_house_blocked"), None)
     margin = thresholds.get("prefer_in_house_within", 0.10)
-    if in_house and not hard and co_man["capture"]["median"] - in_house["capture"]["median"] <= margin:
-        chosen = in_house
+    bench_route = next((r for r in routes if r["route"] == "observed_benchmark"), None)
+    if bench_route and not own_plant:
+        chosen = bench_route
+        basis = (f"observed: median time to market of {bench['n']} real launches "
+                 f"({', '.join(bench['companies'])})")
+    elif in_house and not hard and co_man["capture"]["median"] - in_house["capture"]["median"] <= margin:
+        chosen, basis = in_house, ("your plant data" if own_plant else f"{plant_status.replace('_', ' ')} (illustrative)")
     else:
-        chosen = co_man
+        chosen, basis = co_man, ("your plant data" if own_plant else f"{plant_status.replace('_', ' ')} (illustrative)")
     launch = dt.date.fromisoformat(chosen["launch_date"])
 
     # 6. Compliance for the target market (at the launch date) ---------------
@@ -211,6 +260,9 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
         ("half-life reference is a placeholder", sig["reference_status"] != "computed"),
         ("market interest read from shared English, not the market's own language", sig["basis"] != "own_language"),
         ("product spec is a mock fallback", spec_source == "mock_fallback"),
+        ("time to shelf comes from sample plant data, not real data", chosen["route"] != "observed_benchmark" and not own_plant),
+        ("time to market from launches found with Google Search, not hand-checked",
+         chosen["route"] == "observed_benchmark" and bench_source == "ai_discovered"),
     ] if on]
     if verdict == "GO" and (hard or downgrade):
         verdict = "CONDITIONAL"
@@ -220,6 +272,7 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
                 "deadline_go_days": go_days,
                 "deadline_go_date": deadline["go_by_date"]["median"] if deadline["go_by_date"] else None,
                 "days_to_shelf": chosen["total_days"],
+                "time_to_shelf_basis": basis,
                 "slack_days": (go_days - chosen["total_days"]) if go_days is not None else None,
                 "faster_line_blocked": ({"line": blocked_route["line"], "total_days": blocked_route["total_days"],
                                          "blocked_by": blocked_route["blocked_by"]} if blocked_route else None)}
@@ -253,11 +306,19 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
                                                    "weights": weights})
         log("Market Scan", "Top markets: " + ", ".join(f"{r['market']} {r['score']}" for r in scan_rows[:3]))
 
+    # 7b. Record the real-world evidence -----------------------------------------
+    ev_refs = None
+    if ref_rows:
+        ev_refs = reg.record("reference_launches", ref_key, {
+            "launches": ref_rows, "windows": ref_windows, "time_to_market": bench, "model_check": mcheck,
+            "origin": {k: str(v) for k, v in ((ref_entry or {}).get("origin") or {}).items()}})
+
     # 8. Writer + verifier loop ------------------------------------------------
     state = {"trend": trend, "sku": sku_id, "as_of": as_of.isoformat(), "market": market,
              "market_name": m["name"],
              "evidence_index": {"trend": ev_trend, "spec": ev_spec, "bom": ev_bom, "lines": ev_lines,
                                 "compliance": ev_comp, "decision": ev_decision, "deadline": ev_deadline,
+                                **({"reference_launches": ev_refs} if ev_refs else {}),
                                 **{f"timeline_{k}": v for k, v in route_ids.items()}},
              "decision": decision,
              "top_markets": [r["market"] for r in scan_rows[:3]]}
@@ -290,6 +351,12 @@ def run(trend: str, sku_id: str, as_of: dt.date, market: str, image: tuple[bytes
         "compliance": comp,
         "routes": routes,
         "shelf_deadline": deadline,
+        "reference_launches": ref_rows,
+        "reference_windows": ref_windows,
+        "time_to_market_benchmark": (bench | {"source": bench_source}) if bench else None,
+        "launch_discovery": ({k: v for k, v in discovered_info.items() if k != "launches"} if discovered_info else None),
+        "model_check": mcheck,
+        "trend_origin": {k: str(v) for k, v in (ref_entry.get("origin") or {}).items()} if ref_entry and ref_entry.get("origin") else None,
         "decision": decision,
         "market_scan": scan_rows,
         "plan": plan.model_dump() if plan else None,
