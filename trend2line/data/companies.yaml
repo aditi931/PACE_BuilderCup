@@ -1,0 +1,10 @@
+# Real companies whose PUBLIC product data (Open Food Facts) is turned into profiles at deploy time.
+# Products, ingredients, allergens, "may contain" warnings and free-from labels are real; lines are inferred.
+# Build locally with:  python -m scripts.build_company_profile --all
+# Chosen for the Dubai-chocolate case: Lindt and Cadbury launched one; Amul and Britannia are large Indian
+# makers for whom the same question applies.
+companies:
+  - {brand: lindt, market: EU, languages: "en,de,fr", note: "Launched Dubai Style chocolate (Aachen, Germany)"}
+  - {brand: cadbury, country: india, market: IN, languages: "en", note: "Mondelez India launched Cadbury Silk Dubai Chocolate"}
+  - {brand: amul, country: india, market: IN, languages: "en", note: "Large Indian dairy and chocolate maker (Anand, Gujarat)"}
+  - {brand: britannia, country: india, market: IN, languages: "en", note: "Large Indian bakery and dairy maker"}

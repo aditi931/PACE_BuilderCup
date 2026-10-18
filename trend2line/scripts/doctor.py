@@ -1,5 +1,6 @@
 """Health check: run from the repo root with   python -m scripts.doctor
-Add --gemini to also make one tiny Gemini call with your key.
+Add --gemini to also make one tiny Gemini call, and --gcp to exercise every Google Cloud service for real
+(Vertex AI models and grounding, BigQuery dry run, Firestore write/read/delete).
 
 Prints OK / WARN / FAIL for each check with a fix hint, then a summary. Paste the output when asking for help.
 It never prints your key, only its type and length.
@@ -174,10 +175,68 @@ def check_gemini(s) -> None:
                "AIza keys need GEMINI_AUTH=ai_studio. Check GEMINI_MODEL with scripts.smoke_gemini")
 
 
+def check_gcp(s) -> None:
+    """Real calls to each Google Cloud service the app uses. Costs: a few Gemini tokens, a free dry run."""
+    hint_auth = "gcloud auth application-default login  and set GOOGLE_CLOUD_PROJECT in .env"
+    try:
+        import google.auth
+        creds, proj = google.auth.default()
+        report("OK", "Google credentials (ADC)", f"project from ADC: {proj or '-'}; GOOGLE_CLOUD_PROJECT: {s.gcp_project or '-'}")
+    except Exception as exc:
+        report("FAIL", "Google credentials (ADC)", type(exc).__name__, hint_auth)
+        return
+    if not s.gcp_project:
+        report("FAIL", "GOOGLE_CLOUD_PROJECT", "not set", "set it in .env (deploy.sh sets it on Cloud Run)")
+        return
+    from app.llm import LLM
+    llm = LLM(s)
+    try:
+        names = llm.list_models()
+        flash = [n for n in names if "flash" in n]
+        report("OK" if names else "WARN", f"Gemini models on {s.resolved_auth}", ", ".join(flash[:6]) or "none listed",
+               "enable aiplatform.googleapis.com and grant roles/aiplatform.user")
+    except Exception as exc:
+        report("FAIL", "Gemini model list", str(exc)[:200], "gcloud services enable aiplatform.googleapis.com")
+    if s.gemini_model:
+        try:
+            text, sources = llm.grounded("doctor", "Which city is the capital of France? Answer in one word.")
+            report("OK" if sources else "WARN", "Gemini + Google Search grounding",
+                   f"answer '{text.strip()[:30]}', {len(sources)} web sources",
+                   "grounding may be unavailable for this model or region; try GOOGLE_CLOUD_LOCATION=global")
+        except Exception as exc:
+            report("FAIL", "Gemini + Google Search grounding", str(exc)[:200], "check GEMINI_MODEL and Vertex AI access")
+    try:
+        from google.cloud import bigquery
+        from app.stages import radar
+        client = bigquery.Client(project=s.gcp_project)
+        cfg = bigquery.QueryJobConfig(dry_run=True, use_query_cache=False, query_parameters=[
+            bigquery.ScalarQueryParameter("days", "INT64", 14),
+            bigquery.ArrayQueryParameter("codes", "STRING", ["IN", "JP"]),
+            bigquery.ScalarQueryParameter("include_us", "BOOL", True)])
+        job = client.query(radar.SQL, job_config=cfg)
+        gb = (job.total_bytes_processed or 0) / 1024 ** 3
+        report("OK" if gb <= s.bq_max_gb else "WARN", "BigQuery Google Trends (dry run)",
+               f"radar query would scan {gb:.2f} GB (cap {s.bq_max_gb} GB)", "raise BQ_MAX_GB or lower the days")
+    except Exception as exc:
+        report("FAIL", "BigQuery", str(exc)[:200], "gcloud services enable bigquery.googleapis.com; grant roles/bigquery.jobUser")
+    try:
+        from google.cloud import firestore
+        db = firestore.Client(project=s.gcp_project)
+        ref = db.collection("trend2line_doctor").document("ping")
+        ref.set({"at": dt.datetime.now(dt.timezone.utc).isoformat()})
+        ok = ref.get().exists
+        ref.delete()
+        report("OK" if ok else "FAIL", "Firestore write/read/delete", "ok" if ok else "read back failed")
+    except Exception as exc:
+        report("FAIL", "Firestore", str(exc)[:200],
+               "gcloud firestore databases create --location=asia-south1; grant roles/datastore.user")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--gemini", action="store_true", help="also make one tiny Gemini call")
     ap.add_argument("--no-network", action="store_true")
+    ap.add_argument("--gcp", action="store_true", help="exercise Vertex AI, grounding, BigQuery and Firestore")
     a = ap.parse_args()
     print(f"Trend2Line doctor  {dt.datetime.now():%Y-%m-%d %H:%M}  on {sys.platform}\n")
     check_python()
@@ -193,6 +252,8 @@ def main() -> None:
         check_network(s)
     if a.gemini and not s.mock_llm:
         check_gemini(s)
+    if a.gcp:
+        check_gcp(s)
     fails = [n for st, n in RESULTS if st == "FAIL"]
     warns = [n for st, n in RESULTS if st == "WARN"]
     print(f"\n{len(RESULTS) - len(fails) - len(warns)} OK, {len(warns)} WARN, {len(fails)} FAIL")

@@ -13,7 +13,7 @@ h1{margin:0;font-size:20px}header p{margin:0;color:var(--mute)}
 main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
 h2{font-size:15px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
-form{display:grid;grid-template-columns:2fr 1.4fr 1fr 1.4fr;gap:10px;align-items:end}
+form{display:grid;grid-template-columns:1.6fr 1.3fr 1.5fr 1fr 1.3fr;gap:10px;align-items:end}
 @media(max-width:760px){form{grid-template-columns:1fr}}
 label{font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:4px;min-width:0}
 form>*{min-width:0}input:not([type=checkbox]),select{width:100%;min-width:0;text-overflow:ellipsis}
@@ -36,25 +36,35 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
 .st.verified{background:#e6f4ea;color:#14532d}.st.failed{background:#fde8e8;color:#7f1d1d}.st.assumption{background:#fff4e5;color:#7a4b00}
 .mute{color:var(--mute);font-size:13px}svg{width:100%;height:auto}
 .st.verified_official{background:#e6f4ea;color:#14532d}.st.verified_secondary{background:#e8eefc;color:#1e3a8a}.st.needs_review{background:#fff4e5;color:#7a4b00}
-.st.real_open_data{background:#e6f4ea;color:#14532d}.st.researched_regulation{background:#e8eefc;color:#1e3a8a}.st.sample_company_input,.st.company_input,.st.uploaded_company_input{background:#f0efe9;color:#4a4a45}
+.st.real_open_data,.st.real_public_record{background:#e6f4ea;color:#14532d}.st.public_pack_data_inferred_lines{background:#fff4e5;color:#7a4b00}.st.researched_regulation{background:#e8eefc;color:#1e3a8a}.st.sample_company_input,.st.company_input,.st.uploaded_company_input{background:#f0efe9;color:#4a4a45}
 .st.synthetic,.st.placeholder,.st.mock_llm,.st.mock_fallback{background:#fde8e8;color:#7f1d1d}.st.gemini{background:#e8eefc;color:#1e3a8a}
 @media (prefers-color-scheme:dark){.st.verified_secondary,.st.researched_regulation,.st.gemini{background:#1b2a4d;color:#b9c8f5}.st.needs_review{background:#3a2a10;color:#f3c77a}}
 .row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.small{font-size:13px}a{color:var(--acc)}
 tr.target td{background:var(--chip)}
 .track{overflow:visible}.deadline{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--no)}
 .deadline-key{display:inline-block;width:2px;height:12px;background:var(--no);vertical-align:middle;margin-right:4px}
-.deadline-kpi b{color:var(--no)}td.num{text-align:right;font-variant-numeric:tabular-nums}
+.deadline-kpi b{color:var(--no)}
+.svc{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--chip);margin-right:4px}.svc.on{background:#e6f4ea;color:#14532d}.svc.off{opacity:.65}
+@media (prefers-color-scheme:dark){.svc.on{background:#14321f;color:#b7e4c7}}
+.chipbtn{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;margin:3px;color:var(--fg);font:inherit}
+.st.ai_discovered{background:#ede9fe;color:#4c1d95}.st.curated{background:#e6f4ea;color:#14532d}td.num{text-align:right;font-variant-numeric:tabular-nums}td.d,span.d{white-space:nowrap}
 </style>
 </head>
 <body>
 <header><h1>Trend2Line</h1><p>From viral trend to a verified factory decision.</p></header>
 <main>
   <div id="mode"></div>
+    <div id="services" class="row2 small" style="margin:6px 0 10px"></div>
+    <div class="card" id="radar"><div class="row2"><h2 style="margin:0">Trend radar</h2>
+      <span class="mute small">Rising Google searches in each market (BigQuery public Google Trends data), filtered to food by Gemini.</span>
+      <button type="button" id="radarBtn" style="margin-left:auto;width:auto;padding:6px 12px">Scan last 14 days</button></div>
+      <div id="radarOut" class="small" style="margin-top:8px"></div></div>
   <div class="card">
     <form id="f">
       <label>Trend name<input name="trend" id="trend" list="demos" placeholder="Any food trend, e.g. Croffle" required></label>
       <datalist id="demos"></datalist>
-      <label>Compare against our SKU<select name="sku_id" id="sku"></select></label>
+      <label>Company<select name="company" id="company"></select></label>
+      <label>Compare against product<select name="sku_id" id="sku"></select></label>
       <label>Run as of<input type="date" name="as_of" id="as_of" required></label>
       <label>Target market<select name="market" id="market"></select></label>
       <label>Product photo (optional)<input type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
@@ -65,6 +75,8 @@ tr.target td{background:var(--chip)}
     </form>
   </div>
   <div id="out"></div>
+    <div class="card" id="history"><div class="row2"><h2 style="margin:0">Recent decisions</h2><span class="mute small" id="histStore"></span>
+      <button type="button" id="histBtn" style="margin-left:auto;width:auto;padding:6px 12px">Refresh</button></div><div id="histOut" class="small" style="margin-top:8px"></div></div>
 </main>
 <script>
 const $ = s => document.querySelector(s);
@@ -82,6 +94,8 @@ function fillSkus(skus) {
 
 fetch("/api/config").then(r => r.json()).then(c => {
   CFG = c;
+  $("#company").innerHTML = Object.entries(c.companies).map(([k, v]) =>
+    `<option value="${esc(k)}">${esc(v.name)}${v.products ? " · " + v.products + " real products" : ""}</option>`).join("");
   fillSkus(c.skus);
   $("#market").innerHTML = Object.entries(c.markets).map(([k, v]) =>
     `<option value="${esc(k)}" ${k === c.home_market ? "selected" : ""}>${esc(v.name)}</option>`).join("");
@@ -90,9 +104,57 @@ fetch("/api/config").then(r => r.json()).then(c => {
   $("#as_of").max = c.today;
   const notes = [];
   if (c.mode === "offline") notes.push("OFFLINE MODE: trend curves are synthetic test data, not real. Unset OFFLINE for live Wikipedia data.");
-  if (c.mode === "mock_llm") notes.push("MOCK GEMINI: trend data is live, but product specs and the write-up are canned. Set GOOGLE_API_KEY and GEMINI_MODEL for live Gemini.");
+  if (c.mode === "mock_llm") notes.push("TEST MODE (MOCK_LLM=1): Gemini answers are canned. Production runs use Gemini on Vertex AI; set GOOGLE_CLOUD_PROJECT (or a key) and GEMINI_MODEL, and MOCK_LLM=0.");
   if (c.reference_status !== "computed") notes.push("Half-life reference is a placeholder; verdicts are capped at CONDITIONAL until it is computed (python -m scripts.build_fad_reference).");
   $("#mode").innerHTML = notes.map(n => `<div class="banner">${esc(n)}</div>`).join("");
+  const sv = c.services, on = (ok, label) => `<span class="svc ${ok ? "on" : "off"}">${ok ? "●" : "○"} ${esc(label)}</span>`;
+  $("#services").innerHTML = on(sv.gemini.live, `Gemini on ${sv.gemini.platform}${sv.gemini.model ? " · " + sv.gemini.model : ""}`) +
+    on(sv.grounding, "Google Search grounding") + on(sv.bigquery, "BigQuery trend radar") +
+    on(sv.run_store === "firestore", sv.run_store === "firestore" ? "Firestore history" : `History: ${sv.run_store}`) +
+    (sv.project ? `<span class="mute">project ${esc(sv.project)}</span>` : "");
+  $("#radarBtn").disabled = !sv.bigquery;
+  if (!sv.bigquery) $("#radarOut").innerHTML = `<span class="mute">Needs GOOGLE_CLOUD_PROJECT with BigQuery (on by default on Cloud Run).</span>`;
+  loadHistory();
+});
+
+$("#radarBtn").addEventListener("click", async () => {
+  const b = $("#radarBtn"); b.disabled = true; b.textContent = "Querying BigQuery…";
+  try {
+    const r = await fetch("/api/radar?days=14"), j = await r.json();
+    if (!r.ok) throw new Error(j.detail || r.statusText);
+    if (!j.food_trends.length) { $("#radarOut").innerHTML = `<span class="mute">No food trends among ${j.terms_scanned} rising searches.</span>`; return; }
+    $("#radarOut").innerHTML = j.food_trends.slice(0, 40).map(t =>
+      `<button type="button" class="chipbtn" data-trend="${esc(t.english_name)}" data-market="${esc(t.market || "")}"
+        title="${esc(t.term)} · +${esc(t.percent_gain)}% · rank ${esc(t.best_rank)} · ${esc(t.last_seen)}">${esc(t.english_name)} <span class="mute">${esc(t.country)} +${esc(t.percent_gain)}%</span></button>`).join("") +
+      `<div class="mute">${j.terms_scanned} rising searches in ${j.countries.length} countries · ${esc(j.source)} · click one to analyse it</div>`;
+    document.querySelectorAll(".chipbtn").forEach(el => el.addEventListener("click", () => {
+      $("#trend").value = el.dataset.trend; if (el.dataset.market) $("#market").value = el.dataset.market;
+      $("#as_of").value = CFG.today; $("#trend").scrollIntoView({behavior: "smooth"});
+    }));
+  } catch (err) { $("#radarOut").innerHTML = `<span class="bad">Radar failed: ${esc(err.message)}</span>`; }
+  finally { b.disabled = false; b.textContent = "Scan last 14 days"; }
+});
+
+async function loadHistory() {
+  try {
+    const r = await fetch("/api/runs?limit=10"), j = await r.json();
+    if (!r.ok) throw new Error(j.detail || r.statusText);
+    $("#histStore").textContent = j.store === "firestore" ? "stored in Firestore" : `stored: ${j.store}`;
+    $("#histOut").innerHTML = j.runs.length ? j.runs.map(x => `<div><a href="#" data-run="${esc(x.id)}">${esc(x.created_at)} · ${esc(x.trend)} · ${esc(x.market)} · <b>${esc(x.verdict)}</b></a>
+      <span class="mute">${esc(x.company || "")} · ${esc(x.mode)}</span></div>`).join("") : `<span class="mute">No runs yet.</span>`;
+    document.querySelectorAll("[data-run]").forEach(a => a.addEventListener("click", async ev => {
+      ev.preventDefault();
+      const rr = await fetch(`/api/runs/${a.dataset.run}`);
+      if (rr.ok) { render(await rr.json()); $("#out").scrollIntoView({behavior: "smooth"}); }
+    }));
+  } catch (err) { $("#histOut").innerHTML = `<span class="mute">History unavailable: ${esc(err.message)}</span>`; }
+}
+$("#histBtn").addEventListener("click", loadHistory);
+
+$("#company").addEventListener("change", e => {
+  const co = CFG.companies[e.target.value];
+  fillSkus(co.skus);
+  if (co.home_market && CFG.markets[co.home_market]) $("#market").value = co.home_market;
 });
 
 $("#trend").addEventListener("change", e => {
@@ -102,7 +164,7 @@ $("#trend").addEventListener("change", e => {
 
 $("#plant_file").addEventListener("change", async e => {
   const f = e.target.files[0];
-  if (!f) { fillSkus(CFG.skus); return; }
+  if (!f) { fillSkus(CFG.companies[$("#company").value].skus); return; }
   const fd = new FormData(); fd.append("plant_file", f);
   const r = await fetch("/api/plant/validate", {method: "POST", body: fd});
   const j = await r.json();
@@ -123,17 +185,55 @@ $("#f").addEventListener("submit", async e => {
     const j = await r.json();
     if (!r.ok) throw new Error(j.detail || r.statusText);
     render(j);
+    loadHistory();
   } catch (err) {
     $("#out").innerHTML = `<div class="card bad">Could not finish the analysis: ${esc(err.message)}</div>`;
   } finally { btn.disabled = false; btn.textContent = "Run analysis"; }
 });
 
-function sparkline(pts) {
+function sparkline(pts, marks) {
   if (!pts || pts.length < 2) return "";
   const w = 600, h = 140, max = Math.max(...pts.map(p => p[1])) || 1;
+  const t0 = Date.parse(pts[0][0]), t1 = Date.parse(pts[pts.length - 1][0]);
   const xy = pts.map((p, i) => `${(i / (pts.length - 1)) * w},${h - (p[1] / max) * (h - 10)}`).join(" ");
-  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Interest over time"><polyline fill="none" stroke="var(--acc)" stroke-width="2" points="${xy}"/></svg>
-    <div class="mute">${esc(pts[0][0])} to ${esc(pts[pts.length - 1][0])} (weekly, 7-day smoothed daily views)</div>`;
+  const lines = (marks || []).filter(m => { const t = Date.parse(m.date); return t >= t0 && t <= t1; }).map(m => {
+    const x = (Date.parse(m.date) - t0) / (t1 - t0) * w;
+    return `<line x1="${x}" x2="${x}" y1="0" y2="${h}" stroke="var(--no)" stroke-width="1.5" stroke-dasharray="4 3"><title>${esc(m.brand)} ${esc(m.date)}</title></line>
+      <text x="${Math.min(x + 3, w - 60)}" y="12" font-size="11" fill="var(--no)">${esc(m.brand)}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Interest over time"><polyline fill="none" stroke="var(--acc)" stroke-width="2" points="${xy}"/>${lines}</svg>
+    <div class="mute">${esc(pts[0][0])} to ${esc(pts[pts.length - 1][0])} (weekly, 7-day smoothed daily views)${(marks || []).length ? " · dashed lines: real launches in this market" : ""}</div>`;
+}
+
+const POS = {before_takeoff: "before take-off", while_rising: "while rising", after_peak_window_open: "after the peak, window still open",
+             after_window_closed: "after the window closed"};
+
+function refLaunches(j, target) {
+  const list = j.reference_launches;
+  if (!list || !list.length) return "";
+  const b = j.time_to_market_benchmark, o = j.trend_origin, W = j.reference_windows || {};
+  const mname = m => CFG && CFG.markets[m] ? CFG.markets[m].name : m;
+  const timing = r => r.status === "after_run_date" ? "after the run date" : r.status === "no_data" ? "no interest data" :
+    r.days_after_takeoff < 0 ? `${-r.days_after_takeoff} days before take-off` :
+    `${r.days_after_takeoff} days after take-off<div class="mute small">${esc(POS[r.position] || "")}</div>`;
+  return `<div class="card"><h2>Real-world evidence: companies that launched this trend</h2>
+    ${o ? `<p class="small">Trend origin: <b>${esc(o.company)}</b> "${esc(o.product)}", ${esc(o.event)} on ${esc(o.date)} · ${link(o.source_url, o.source_title)}</p>` : ""}
+    ${b ? `<p><b>Real companies needed ${b.median} days</b> (median of ${b.n}; ${b.p25}–${b.p75}) from take-off in their market to shelf. Fastest: ${esc(b.fastest)}, ${b.fastest_days} days. The verdict uses this when the plant data is not your own${b.source === "ai_discovered" ? " (based on launches found with Google Search, not hand-checked)" : ""}.</p>` : `<p class="mute small">Not enough launches after take-off to measure real time to market for this run date.</p>`}
+    <div class="wrap"><table><tr><th>Date</th><th>Company · product</th><th>Market</th><th>Timing</th><th class="num">Interest left</th><th>Source</th></tr>
+    ${list.map(r => `<tr class="${r.market === target ? "target" : ""}"><td><span class="d">${esc(r.date)}</span><div class="mute small">${esc(r.date_basis)}</div></td>
+      <td><b>${esc(r.brand)}</b> ${esc(r.product)} ${chip(r.verification, r.verification === "ai_discovered" ? "found with Google Search" : "hand-checked")}<div class="mute small">${esc(r.company)}${r.positioning ? " · " + esc(r.positioning) : ""}${r.made_in ? " · made in " + esc(r.made_in) : ""}</div></td>
+      <td>${esc(mname(r.market))}</td><td class="small">${timing(r)}</td>
+      <td class="num">${r.interest_at_launch_share_of_peak != null ? pct(r.interest_at_launch_share_of_peak) + " of peak" : "–"}</td>
+      <td class="small">${r.source_url ? link(r.source_url, r.source_title) : '<span class="mute">see Google sources below</span>'}</td></tr>`).join("")}</table></div>
+    ${j.launch_discovery ? `<details class="small" style="margin-top:8px"><summary>Gemini + Google Search: ${j.launch_discovery.rows_returned} launches returned, ${j.launch_discovery.rejected.length} rejected by code checks, ${j.launch_discovery.grounding_sources.length} web sources</summary>
+      ${j.launch_discovery.grounding_sources.map(g => `<div>${link(g.uri, g.title || g.domain)}</div>`).join("")}
+      ${j.launch_discovery.rejected.map(x => `<div class="mute">Rejected: ${esc(x.row.brand || x.row.company || "?")} (${esc(x.reason)})</div>`).join("")}</details>` : ""}
+    ${Object.keys(W).length ? `<h2 style="margin-top:14px">Observed trend window per market</h2><div class="wrap"><table class="small">
+      <tr><th>Market</th><th>Read from</th><th>Take-off</th><th>Peak</th><th>Window closed (below 50% of peak)</th><th class="num">Observed half-life</th></tr>
+      ${Object.entries(W).map(([m, w]) => `<tr><td>${esc(mname(m))}</td><td>${esc(w.languages_used.join(", "))}</td><td class="d">${esc(w.takeoff_date)}</td><td class="d">${esc(w.peak_date)}</td>
+        <td class="d">${esc(w.window_closed_date || "still open")}</td><td class="num">${w.observed_half_life_days == null ? "–" : w.observed_half_life_days + " d"}</td></tr>`).join("")}</table></div>` : ""}
+    ${(j.model_check || []).length ? `<p class="small">Model check: ${j.model_check.map(c => `${esc(mname(c.market))} predicted ${c.predicted_median} d (${c.predicted_range.join("–")}), observed ${c.observed} d ${c.within_range ? '<span class="ok">within range</span>' : '<span class="bad">outside range</span>'}`).join("; ")}${j.model_check[0].reference_status !== "computed" ? " (reference still a placeholder)" : ""}.</p>` : ""}
+  </div>`;
 }
 
 function gantt(route, deadline) {
@@ -207,8 +307,8 @@ function render(j) {
     <div class="big ${esc(d.verdict)}">${esc(d.verdict)}</div>
     ${deadlineKpi(j.shelf_deadline)}
     <div class="kpi"><b>${esc(c.market_name)}</b><span>Target market</span></div>
-    <div class="kpi"><b>${esc(d.route.replace("_", " "))}${d.line ? " · " + esc(d.line) : ""}</b><span>Route</span></div>
-    <div class="kpi"><b>${chosen.total_days} days</b><span>Time to shelf (${esc(chosen.launch_date)})</span></div>
+    <div class="kpi"><b>${esc(d.route.replace(/_/g, " "))}${d.line ? " · " + esc(d.line) : ""}</b><span>Route</span></div>
+    <div class="kpi"><b>${chosen.total_days} days</b><span>Time to shelf (${esc(chosen.launch_date)}) · ${esc(d.time_to_shelf_basis)}</span></div>
     <div class="kpi"><b>${pct(d.capture_median)}</b><span>Interest left at launch (range ${pct(chosen.capture.p25)}–${pct(chosen.capture.p75)})</span></div>
     <div class="kpi"><b>${v ? v.trust : "–"}</b><span>Trust score</span></div>
     ${slackLine(d)}
@@ -217,7 +317,7 @@ function render(j) {
   </div>
   ${blastRadius(j.allergen_blast_radius)}
   <div class="grid2">
-    <div class="card"><h2>Interest · ${esc(tr.article)}</h2>${sparkline(tr.series_weekly)}
+    <div class="card"><h2>Interest · ${esc(tr.article)}</h2>${sparkline(tr.series_weekly, (j.reference_launches || []).filter(r => r.market === c.market))}
       <p>Stage <b>${esc(tr.stage)}</b> · momentum ${tr.momentum_90d} · ${esc(tr.reference_class)} fad</p>
       <p class="small mute">Read from ${esc((tr.languages_used || []).join(", "))} Wikipedia (${esc((tr.basis || "").replace(/_/g, " "))}). Article exists in ${tr.editions_available.length} languages. ${esc(tr.source)}</p></div>
     <div class="card"><h2>Product vs ${esc(b.our_sku)}</h2>
@@ -225,6 +325,7 @@ function render(j) {
       ${ingredients(b)}
       ${b.new_allergens_vs_our_sku.length ? `<p class="small">New allergens vs our SKU: ${b.new_allergens_vs_our_sku.map(a => `<span class="chip alg">${tag(a)}</span>`).join("")}</p>` : ""}</div>
   </div>
+  ${refLaunches(j, c.market)}
   ${compliance(c)}
   ${marketScan(j.market_scan, c.market)}
   <div class="card"><h2>Line feasibility</h2><div class="wrap"><table>
@@ -247,6 +348,7 @@ function render(j) {
   <div class="card"><h2>Where every input came from</h2><div class="wrap"><table class="small"><tr><th>Input</th><th>Status</th><th>Detail</th></tr>
     ${j.provenance.map(p => `<tr><td>${esc(p.input)}</td><td>${chip(p.status)}</td><td>${esc(p.detail)}</td></tr>`).join("")}</table></div></div>
   <div class="card"><h2>Run log</h2>${j.steps.map(s => `<div class="mute">${s.t}s · <b>${esc(s.step)}</b> (${esc(s.kind)}) ${esc(s.detail)}</div>`).join("")}
+    ${j.run_id ? `<div class="mute">Saved as run ${esc(j.run_id)} (${esc(j.run_store)})</div>` : ""}
     <div class="mute">Mode ${esc(j.mode)} · LLM calls ${j.llm_calls} · cache hits ${j.cache_hits} · web requests ${j.http_requests} · ${j.evidence.length} evidence items</div></div>`;
 }
 </script>

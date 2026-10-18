@@ -83,4 +83,17 @@ def write_plan(prompt: str, ctx: dict) -> dict:
             "claims": claims}
 
 
-MOCK_HANDLERS = {"deconstruct": deconstruct, "pick_article": pick_article, "write_plan": write_plan}
+def discover_launches(prompt: str, ctx: dict) -> dict:
+    """Tests only: no web access, so no launches. Never invents data."""
+    return {"text": "[]", "sources": []}
+
+
+def radar_classify(prompt: str, ctx: dict) -> dict:
+    """Tests only: a term counts as food if it contains a word from a tiny fixed list."""
+    food = ("chocolate", "coffee", "cake", "tea", "kunafa", "noodle", "boba", "mochi", "croffle")
+    return {"items": [{"term": t, "is_food_trend": any(f in t.lower() for f in food),
+                       "english_name": t if any(f in t.lower() for f in food) else ""} for t in ctx.get("terms", [])]}
+
+
+MOCK_HANDLERS = {"deconstruct": deconstruct, "pick_article": pick_article, "write_plan": write_plan,
+                 "discover_launches": discover_launches, "radar_classify": radar_classify}

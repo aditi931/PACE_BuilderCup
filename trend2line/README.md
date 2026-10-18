@@ -90,7 +90,9 @@ come from the calculator, so the AI can't make up a convenient answer.
 | Labelling rules for 12 markets | Official regulator sites and reputable summaries, each with a link and a "how sure are we" badge | Researched |
 | Country population and income | World Bank | Real |
 | Place names (for "misleading origin" checks) | GeoNames world cities list | Real |
-| Our factory, lines and products | A made-up sample company | **Sample** |
+| Company products, allergens, free-from claims | Real companies' products in Open Food Facts (Lindt, Cadbury India, Amul, Britannia), or a sample company | **Real products, inferred lines** / Sample |
+| Time to shelf | Observed from real launches when available; otherwise your plant data, or sample data (flagged) | **Real (observed)** / Your data / Sample |
+| Real launches and the trend's origin | Press releases, trade press, retailer listings, news | Real, linked |
 | How long tasks take, equipment lead times | Sample figures | **Sample** |
 
 **About the sample company.** No company publishes its factory details, so the factory side uses an illustrative
@@ -111,6 +113,44 @@ so they're useful even without any company data.
 
 (Exact numbers depend on the run date and on live data.)
 
+## Real-world impact: shown on real companies, not a made-up factory
+
+Trend2Line doesn't need anyone's private factory data to show what it's worth. For a trend with known real
+launches, it measures what actually happened, from public data only.
+
+**Dubai chocolate, as an example:**
+
+1. **Where it started.** FIX Dessert Chocolatier's bar went viral from a TikTok video on 19 December 2023.
+2. **Each market's real trend window.** The app reads each market's own-language Wikipedia interest and finds
+   when interest took off, when it peaked, and when it fell back below half the peak.
+3. **Real launches on that window:**
+   - Lindt's limited New York release (December 2024)
+   - Läderach in India (March 2025)
+   - Lindt Dubai Style Dark in Europe (August 2025)
+   - ITC Fabelle in India (October 2025)
+   - Cadbury Dairy Milk Silk in India (June 2026)
+
+   For each one: how many days after take-off it launched, and how much interest was left.
+4. **Real time to market.** The median number of days real companies needed from take-off to shelf. When the plant
+   data isn't your own, **the verdict uses this observed number instead of sample durations.** No made-up timing
+   decides the answer.
+5. **Model check.** The half-life our fad model predicted, against the half-life actually observed in each market.
+6. **Validation against a real pack.** Our allergen engine reads Lindt's printed ingredient list and finds exactly
+   the allergens Lindt declares (an automatic test).
+7. **Real company portfolios.** Profiles for Lindt, Cadbury (India), Amul and Britannia are built from their real
+   products in Open Food Facts when you deploy. Pick one in the **Company** menu to see which of their real
+   products carry free-from claims a new trend product would put at risk.
+
+**One command writes the whole story as a report for slides, with every source linked:**
+
+```bash
+python -m scripts.case_study --trend "Dubai chocolate" --market IN --company cadbury
+```
+
+**What stays honest.** Launch dates are as reported by public sources (each row says which kind of date). Company
+production lines are not public, so profiles group real products into lines by category and label them
+"(inferred)". The companies are not involved and don't endorse the results.
+
 ## Markets covered
 
 India, European Union, United Kingdom, United States, Canada, Australia & New Zealand, Japan, South Korea, China,
@@ -118,17 +158,20 @@ Singapore, the Gulf states (UAE, Saudi Arabia, Kuwait, Qatar, Bahrain, Oman) and
 
 ## How Google Cloud is used
 
-| Google service | Its job here, in one line |
-|---|---|
-| **Cloud Run** | Runs the website and the analysis; starts when someone visits, sleeps when no one does |
-| **Cloud Build** | Turns the code into a running app each time you deploy, and refreshes the public data at the same time |
-| **Artifact Registry** | Stores the packaged app between deploys |
-| **Secret Manager** | Keeps the Gemini key safe, out of the code |
-| **Gemini** (through Vertex AI or AI Studio) | Describes the product and writes the recommendation, 2 to 5 calls per analysis |
-| **Cloud Logging** | Records what happened, for troubleshooting |
-| **BigQuery** (optional, not used by the app) | A script you can run by hand to discover rising searches by country |
+Everything below runs live in the deployed app. Mock mode exists only for automated tests.
 
-**`SETUP.md`** explains exactly when each one is called and how to set it up.
+| Google service | Its job here |
+|---|---|
+| **Vertex AI: Gemini** | Picks the right Wikipedia article, describes the product (from text or a photo), writes the recommendation that the fact-checker verifies. Runs through the Cloud Run service account; no API key needed. |
+| **Vertex AI: Google Search grounding** | Finds real company launches of *any* trend on the live web, with sources. Code checks every row before it's used. |
+| **BigQuery** | Trend radar: Google's public Trends data shows the top rising searches in each market; Gemini picks out the food trends; one click analyses one. |
+| **Firestore** | Saves every decision with its full evidence ("Recent decisions"), an audit trail you can reopen. |
+| **Cloud Run** | Runs the app; scales to zero when idle. |
+| **Cloud Build** | Builds the app and, during the build, refreshes the open data, computes fad half-lives and builds real company profiles. |
+| **Artifact Registry, Secret Manager, IAM, Cloud Logging** | Store the build, keep an optional key safe, grant exact permissions, keep logs. |
+
+One command deploys and wires it all up: `PROJECT_ID=… GEMINI_MODEL=… ./deploy.sh`. **`SETUP.md`** explains when
+each service is called.
 
 ## What it isn't
 
@@ -157,7 +200,7 @@ app/        the application (the researcher, calculator and fact-checker)
 data/       all the facts the app relies on: markets, ingredients, sample plant
 static/     the web page
 scripts/    data refresh and health checks (start with: python -m scripts.doctor)
-tests/      automatic checks (32 of them)
+tests/      automatic checks (47 of them)
 docs/TECHNICAL.md   developer details
 SETUP.md    Google Cloud setup and when each service is called
 ROADMAP.md  what to build next

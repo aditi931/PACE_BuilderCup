@@ -26,14 +26,14 @@ def main() -> None:
     s = get_settings()
     print(f"auth path: {s.resolved_auth}   key set: {bool(s.google_api_key)}   GEMINI_MODEL: {s.gemini_model or '(unset)'}")
     llm = LLM(s)
-    client = llm._client_get()
     try:
-        names = sorted(m.name for m in client.models.list() if "gemini" in (m.name or "").lower())
-        print("models visible to this key:")
+        names = llm.list_models()
+        print("Gemini models visible to these credentials:")
         for n in names:
             print("  ", n)
-    except Exception as exc:  # express mode may not allow listing
-        print(f"could not list models ({exc}); try a known Flash model ID in GEMINI_MODEL")
+    except Exception as exc:
+        print(f"could not list models ({exc}); for Vertex AI run `gcloud auth application-default login` "
+              "and set GOOGLE_CLOUD_PROJECT")
     if s.gemini_model:
         r = llm.structured("smoke", "Reply with ok=true and your model family name.", Ping)
         print("structured call OK:", r)

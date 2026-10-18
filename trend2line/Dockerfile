@@ -7,8 +7,8 @@ COPY app ./app
 COPY data ./data
 COPY scripts ./scripts
 COPY static ./static
-# Cloud Build has internet access: refresh the open datasets and compute the fad half-life reference from real
-# Wikimedia pageviews. If a source is down, the committed copies in data/ are kept and the build continues.
+# Cloud Build has internet access: refresh the open datasets, compute the fad half-life reference from real
+# Wikimedia pageviews, and build real company profiles from Open Food Facts. If a source is down, the committed copies in data/ are kept and the build continues.
 # Skip with: --build-arg REFRESH_DATA=0
 ARG REFRESH_DATA=1
 ARG WIKI_USER_AGENT="Trend2Line/0.2 (Cloud Build; set WIKI_USER_AGENT with a contact email)"
@@ -16,6 +16,8 @@ RUN if [ "$REFRESH_DATA" = "1" ]; then \
       python -m scripts.refresh_data || echo "refresh_data: kept committed copies"; \
       WIKI_USER_AGENT="$WIKI_USER_AGENT" CACHE_DIR=/tmp/build_cache python -m scripts.build_fad_reference \
         || echo "build_fad_reference: kept existing reference"; \
+      WIKI_USER_AGENT="$WIKI_USER_AGENT" python -m scripts.build_company_profile --all \
+        || echo "build_company_profile: kept existing profiles"; \
       rm -rf /tmp/build_cache; \
     fi
 # Cloud Run injects PORT; never hardcode it.

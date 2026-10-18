@@ -113,6 +113,10 @@ app/stages/ingredients.py  Open Food Facts taxonomy resolver (names, parents, al
 app/stages/trend.py      Wikipedia search, Wikidata sitelinks, pageviews, fad maths (disk-cached)
 app/stages/signals.py    Per-market signal and transparent market scoring
 app/stages/compliance.py Rules engine over data/markets.yaml
+app/stages/discovery.py  Gemini + Google Search grounding to find real launches; code validates each row
+app/stages/radar.py      BigQuery Google Trends radar (top rising searches), Gemini labels food terms
+app/stages/references.py Trend windows, real launches on the curve, observed time to market, model check
+app/storage.py           Run history in Firestore (Cloud Run) or local files
 app/stages/              bom, feasibility (allergen blast radius), timeline, verifier, catalog
 data/                    Knowledge tables and downloaded sources (authoritative; the LLM never invents these)
 scripts/                 refresh_data, build_fad_reference, smoke_gemini, smoke_live, discover_trends_bq

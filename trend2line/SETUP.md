@@ -1,308 +1,197 @@
-# Trend2Line setup guide: which Google Cloud service is called, and when
+# Trend2Line setup: the Google Cloud services, when each is called, and how to deploy
 
-This guide takes you from a laptop to a live app on Google Cloud, and explains what each Google service does at
-each moment. Read section 1 once; follow sections 3 to 7 in order.
-
----
-
-## 1. The big picture
-
-There are **four moments** in the life of this app, and different services wake up at each one.
-
-```
- ONE-TIME SETUP           EVERY DEPLOY                 EVERY ANALYSIS (a user clicks "Run")
- ─────────────            ────────────                 ────────────────────────────────────
- Enable APIs              you run ./deploy.sh          browser ──► Cloud Run (the app)
- Store key in      ──►      │                                       │
- Secret Manager             ▼                                       ├──► Wikipedia / Wikidata  (not Google)
- Grant permission         Cloud Build                               ├──► Gemini  (2 to 5 calls)
-                            ├─ builds the app                       └──► Cloud Logging (automatic)
-                            ├─ refreshes public data
-                            └─ computes fad half-lives
-                            ▼
-                          Artifact Registry  (stores the built app)
-                            ▼
-                          Cloud Run  (new version goes live;
-                                      reads the key from Secret Manager)
-
- OCCASIONALLY, BY HAND: BigQuery (optional trend discovery script)
-```
-
-### Every service at a glance
-
-| Service | Plain-words job | When it is called | How often |
-|---|---|---|---|
-| **Cloud Run** | Hosts the website and runs each analysis | Every page visit and every "Run analysis" | Per request; sleeps (scales to zero) when idle |
-| **Cloud Build** | Packages the code into a container and runs the build steps | Only when you run `./deploy.sh` | Per deploy |
-| **Artifact Registry** | Stores the packaged container | Written by Cloud Build at deploy; read by Cloud Run when it starts a new copy | Per deploy and per cold start |
-| **Secret Manager** | Holds the Gemini key so it's never in the code | Read when Cloud Run starts a copy of the app | Per cold start, not per request |
-| **Gemini** (Vertex AI or AI Studio) | Describes the product and writes the recommendation | During an analysis, live mode only | 2 to 5 calls per analysis (see section 2) |
-| **IAM** | Gives Cloud Run permission to read the secret | Checked when Cloud Run reads the secret | Set up once |
-| **Cloud Logging** | Keeps the app's logs | Automatically, all the time | Continuous |
-| **BigQuery** (optional) | Finds rising searches per country in Google's public Trends dataset | Only when you run `scripts/discover_trends_bq.py` yourself | By hand; the app never calls it |
-
-**Not Google, but called by the app:** Wikipedia search, Wikidata and Wikimedia page views during each analysis;
-GitHub-hosted open datasets (Open Food Facts, World Bank, GeoNames) during each deploy.
+Trend2Line runs live on Google Cloud. Gemini runs on **Vertex AI** through the Cloud Run service account (no API key
+needed), finds real launches with **Google Search grounding**, scans rising searches with **BigQuery**, and stores every
+decision in **Firestore**. Mock mode exists only for the automated tests.
 
 ---
 
-## 2. What happens during one analysis, step by step
+## 1. The services and when each one is called
 
-| Step | What happens | Service called |
+| Service | What it does here | When it is called |
 |---|---|---|
-| 1 | Browser sends the trend, SKU, date and market | **Cloud Run** receives it (starts a copy first if it was asleep: a "cold start") |
-| 2 | Find the Wikipedia article | Wikipedia search (1 request, more if not found in English) |
-| 3 | If several articles match, pick the right one | **Gemini**, 1 call, only when there's more than one candidate |
-| 4 | Find the same article in other languages | Wikidata (1 to 2 requests) |
-| 5 | Download daily views in up to 18 languages | Wikimedia page views (up to 19 requests, run in parallel) |
-| 6 | Describe the product: ingredients and steps | **Gemini**, 1 call (includes the photo if uploaded) |
-| 7 | Allergens, lines, timeline, deadline, labelling rules, market scan | No external call: pure code over the files in `data/` |
-| 8 | Write the recommendation | **Gemini**, 1 call |
-| 9 | Fact-check; if it fails, ask Gemini to fix it | **Gemini**, up to 2 more calls (`MAX_WRITER_ATTEMPTS=3`) |
-| 10 | Send the result to the browser; log the run | **Cloud Run**, **Cloud Logging** |
+| **Cloud Run** | Hosts the web app and runs each analysis | Every page load and every "Run analysis" |
+| **Vertex AI: Gemini** | Picks the Wikipedia article, describes the product (from text or a photo), writes the summary that the fact-checker verifies | 2 to 5 calls per analysis |
+| **Vertex AI: Google Search grounding** | Finds real company launches of the trend on the live web, with source links; code validates every row | 1 call per analysis (cached) |
+| **BigQuery** (public Google Trends data) | Trend radar: top rising searches per market over the last N days | When someone clicks "Scan last 14 days" (cached 6 hours; hard cap on bytes billed) |
+| **Vertex AI: Gemini** (radar) | Labels which rising searches are food trends and translates them | Once per radar scan |
+| **Firestore** | Saves every decision with its full evidence; powers "Recent decisions" | After every analysis, and when history is opened |
+| **Cloud Build** | Builds the container and, during the build, refreshes the open datasets, computes the fad half-lives and builds the real company profiles | Every `./deploy.sh` |
+| **Artifact Registry** | Stores the built container | Every deploy and every cold start |
+| **Secret Manager** | Holds a Gemini API key, only if you choose `AUTH=api_key` | When Cloud Run starts a copy |
+| **IAM** | Lets the Cloud Run service account use Vertex AI, Firestore and BigQuery | Set up once by `deploy.sh` |
+| **Cloud Logging** | App logs | Continuously |
 
-**Totals per analysis:** 2 to 5 Gemini calls, 3 to about 25 Wikimedia requests.
+Not Google, but called live: **Wikipedia, Wikidata and Wikimedia page views** (interest per market, every
+analysis), **Open Food Facts** (company profiles, at build time) and GitHub-hosted open datasets (at build time).
 
-**Caching saves calls.** Wikimedia answers are kept for 12 hours (`HTTP_CACHE_HOURS`), and identical Gemini
-requests are reused, on the same running copy of the app. Running the same trend twice is fast and free the
-second time, until that copy is shut down.
+### One analysis, step by step
 
-**In `MOCK_LLM=1` mode,** steps 3, 6, 8 and 9 use canned answers and Gemini is never called. Wikipedia data is
-still live.
-
----
-
-## 3. Before you start (one time, about 15 minutes)
-
-You need:
-
-- a **personal Google account** and a **Google Cloud project with billing enabled**
-- the **gcloud CLI** installed (`gcloud --version` to check)
-- **Python 3.12**
-- a **Gemini key**, either:
-  - an **AI Studio key** (starts with `AIza`), or
-  - a **Vertex AI express-mode key** (starts with `AQ.`)
-
-  The app detects which one you have automatically.
-
-> **Security:** never paste a key into chat, code, a screenshot or Git. If that has happened, delete the key and
-> create a new one before going further.
-
-**Set a budget alert** first. In the Cloud console go to *Billing → Budgets & alerts*, and create a small budget
-with email alerts. This is the simplest protection against surprises.
-
----
-
-## 4. Run it on your laptop first
-
-Run everything **from the repo folder** (the one containing `app/`, `data/` and `deploy.sh`). The app reads `.env`
-by itself, so the same steps work in every terminal; you never need `source .env` or `VAR=1 command` tricks.
-
-### 4a. Create the environment (once)
-
-| Step | Git Bash (Windows) | PowerShell (Windows) | Mac / Linux |
-|---|---|---|---|
-| Create | `python -m venv .venv` (or `py -m venv .venv`) | `python -m venv .venv` | `python3 -m venv .venv` |
-| Activate (every new terminal) | `source .venv/Scripts/activate` | `.venv\Scripts\Activate.ps1` | `source .venv/bin/activate` |
-| Install | `pip install -r requirements-dev.txt` | same | same |
-| Settings | `cp .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
-
-If PowerShell refuses to run `Activate.ps1`, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
-
-### 4b. Health check (do this first, and whenever something breaks)
-
-```bash
-python -m scripts.doctor
-```
-
-It checks Python, packages, `.env`, your key type, data files, line endings, an offline end-to-end run and network
-access to Wikipedia, Wikidata and Gemini, and prints a fix next to every FAIL. Paste its output when asking for help.
-
-### 4c. Tests (no keys, no internet)
-
-```bash
-pytest -q          # should say 32 passed
-```
-
-### 4d. Run the app
-
-```bash
-uvicorn app.main:app --reload --port 8080
-```
-
-Open http://localhost:8080. Which mode you get depends on `.env`:
-
-| `.env` | Mode | What you see |
+| Step | What happens | Service |
 |---|---|---|
-| `MOCK_LLM="1"` (the default in `.env.example`) | Live trend data, canned Gemini | Banner "MOCK GEMINI" |
-| `MOCK_LLM="0"`, `GOOGLE_API_KEY` and `GEMINI_MODEL` set | Fully live | No banner |
-| `OFFLINE="1"` | No internet at all, synthetic curves | Banner "OFFLINE MODE" (tests only) |
-
-With no `.env` and no key at all, the app falls back to mock Gemini rather than failing.
-
-### 4e. Go fully live
-
-1. Put your key in `.env` as `GOOGLE_API_KEY="..."` and set `MOCK_LLM="0"`.
-2. Run `python -m scripts.smoke_gemini`. It shows the auth path and lists the models your key can use.
-3. Put one Flash model into `GEMINI_MODEL="..."` in `.env`.
-4. Run `python -m scripts.doctor --gemini`. It should end with 0 FAIL.
-5. Run `python -m scripts.build_fad_reference` to compute real fad half-lives (a few minutes).
-6. Start the app again.
-
-### 4f. If Windows shows strange "modified" files or `$'\r': command not found`
-
-That's Windows line endings. The repo's `.gitattributes` prevents it for new checkouts. To fix an existing checkout:
-
-```bash
-git add --renormalize . && git status
-sed -i 's/\r$//' deploy.sh scripts/*.sh Dockerfile
-```
+| 1 | Find the trend's Wikipedia article (Gemini picks if several match) | Wikipedia, **Vertex AI** |
+| 2 | The same article in every language, then daily views per market language | Wikidata, Wikimedia |
+| 3 | Describe the product: ingredients and process steps | **Vertex AI** |
+| 4 | Find real launches of this trend on the web, with sources | **Vertex AI + Google Search** |
+| 5 | Allergens, lines, labelling rules, trend windows, real time to market, deadline, market scan | Code over `data/` |
+| 6 | Write the summary; the fact-checker sends it back if any number can't be traced | **Vertex AI** (1 to 3 calls) |
+| 7 | Save the decision with its evidence | **Firestore** |
 
 ---
 
-## 5. One-time Google Cloud setup
+## 2. Deploy (one command)
+
+**Prerequisites:**
+- a Google Cloud project with billing enabled
+- the gcloud CLI, signed in with `gcloud auth login`
+- a budget alert under *Billing → Budgets & alerts*
+
+Find a Gemini model ID your project can use:
 
 ```bash
-gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-
-# Switch on the services the app needs
-gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
-  artifactregistry.googleapis.com secretmanager.googleapis.com
-
-# Only if your key starts with "AQ." (Vertex AI express mode) and was created in this project
-gcloud services enable aiplatform.googleapis.com
+gcloud auth application-default login
+GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID python -m scripts.smoke_gemini     # lists Gemini models on Vertex AI
 ```
 
-What each command switches on:
-
-- **`run`** is Cloud Run, which hosts the app.
-- **`cloudbuild`** is Cloud Build, which builds it.
-- **`artifactregistry`** stores the build.
-- **`secretmanager`** holds the key.
-- **`aiplatform`** is Vertex AI, which serves Gemini for `AQ.` keys.
-
-### Store the key in Secret Manager
-
-```bash
-printf '%s' "PASTE_YOUR_NEW_KEY_HERE" | gcloud secrets create gemini-api-key --data-file=-
-```
-
-Using `printf` with a pipe keeps the key out of files. Clear your terminal history afterwards if you're worried.
-
-### Let Cloud Run read the secret (IAM)
-
-```bash
-PROJECT_NUMBER=$(gcloud projects describe YOUR_PROJECT_ID --format='value(projectNumber)')
-gcloud secrets add-iam-policy-binding gemini-api-key \
-  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
-  --role="roles/secretmanager.secretAccessor"
-```
-
-Cloud Run runs as this "compute" service account, which needs permission to open the secret.
-
----
-
-## 6. Deploy
-
-### 6a. First deploy, with no key (canned AI, live data)
-
-```bash
-PROJECT_ID=YOUR_PROJECT_ID MOCK_LLM=1 ./deploy.sh
-```
-
-What happens behind the scenes:
-
-1. `deploy.sh` checks that no non-Google AI library has crept in.
-2. **Cloud Build** receives the code and follows the `Dockerfile`:
-   1. Installs Python packages.
-   2. Downloads fresh copies of the open datasets (Open Food Facts, World Bank, GeoNames, country codes).
-   3. Computes fad half-lives from real Wikipedia page views.
-   4. If any download fails, keeps the copies already in `data/` and carries on.
-3. **Artifact Registry** stores the finished container.
-4. **Cloud Run** starts it in `asia-south1` (Mumbai) and prints a public URL.
-
-The first build takes several minutes; later ones are faster.
-
-### 6b. Go live with Gemini
+Deploy:
 
 ```bash
 PROJECT_ID=YOUR_PROJECT_ID GEMINI_MODEL=YOUR_FLASH_MODEL_ID ./deploy.sh
 ```
 
-This also tells **Cloud Run** to load `GOOGLE_API_KEY` from **Secret Manager** each time it starts a copy.
+`deploy.sh` is safe to re-run. It does the following:
 
-### 6c. Check it worked
+1. Enables Cloud Run, Cloud Build, Artifact Registry, Secret Manager, Vertex AI, Firestore and BigQuery.
+2. Creates the Firestore database if it doesn't exist.
+3. Grants the Cloud Run service account `aiplatform.user`, `datastore.user`, `bigquery.jobUser` and `logging.logWriter`.
+4. Builds with Cloud Build. The build refreshes the open data, computes the fad reference and builds the company profiles.
+5. Deploys to Cloud Run in **live mode**, with Gemini on Vertex AI through the service account. No API key is needed.
+6. Calls `/healthz` and `/api/config`, and prints which services are live.
 
-```bash
-URL=$(gcloud run services describe trend2line --region asia-south1 --format='value(status.url)')
-curl "$URL/healthz"                    # {"ok":true}
-curl "$URL/api/config"                 # mode should be "live"; reference_status should be "computed"
+The final line should look like this:
+
+```
+mode live | gemini Vertex AI vertex_adc <model> | grounding True | bigquery True | runs firestore | fad reference computed | companies 4
 ```
 
-Then open the URL in a browser and run one analysis.
+**Options:**
 
-If `reference_status` isn't `computed`, Cloud Build couldn't reach Wikimedia or found too few fads. The app still
-works, but verdicts stay capped at CONDITIONAL. Run `python -m scripts.build_fad_reference` on your laptop and
-deploy again. The new `data/fad_reference.json` is uploaded with the code, and a later build that can't reach
-Wikimedia keeps it rather than overwriting it.
-
----
-
-## 7. Day to day
-
-| You want to… | Do this | Services involved |
+| Variable | Default | Meaning |
 |---|---|---|
-| Ship a code or data change | `./deploy.sh` again (same variables as before) | Cloud Build, Artifact Registry, Cloud Run |
-| Change the key | `printf '%s' "NEW_KEY" \| gcloud secrets versions add gemini-api-key --data-file=-`, then redeploy | Secret Manager, Cloud Run |
-| See errors | `gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="trend2line"' --limit 50`, or open Cloud Run → trend2line → Logs in the console | Cloud Logging |
-| Avoid slow first load on demo day | Add `--min-instances 1` to `ARGS` in `deploy.sh` and redeploy. One copy stays warm and costs a little while it does | Cloud Run |
-| Remove the warm copy afterwards | Set `--min-instances 0` and redeploy | Cloud Run |
-| Discover new rising trends | `python -m scripts.discover_trends_bq --project YOUR_PROJECT_ID` (needs `pip install google-cloud-bigquery`) | BigQuery |
-| Shut everything down | `gcloud run services delete trend2line --region asia-south1` | Cloud Run |
+| `SERVICE` | `trend2line` | Use `trend2line-dev` for a test copy |
+| `REGION` | `asia-south1` | Cloud Run region |
+| `GEMINI_LOCATION` | `global` | Vertex AI location for Gemini |
+| `FIRESTORE_LOCATION` | `asia-south1` | Only used when creating the database |
+| `AUTH` | `vertex_sa` | `api_key` uses the `gemini-api-key` secret instead of the service account |
+| `SETUP` | `1` | `0` skips APIs, Firestore and IAM for faster redeploys |
+| `MIN_INSTANCES` | `0` | Set `1` on demo day to avoid slow first loads (small cost) |
+
+**Using an API key instead** (for example a Vertex express-mode `AQ.` key):
+
+```bash
+printf '%s' "YOUR_NEW_KEY" | gcloud secrets create gemini-api-key --data-file=-
+AUTH=api_key PROJECT_ID=YOUR_PROJECT_ID GEMINI_MODEL=YOUR_FLASH_MODEL_ID ./deploy.sh
+```
+
+Never paste a key into chat, code or Git. If that has happened, delete it and create a new one.
 
 ---
 
-## 8. Settings (environment variables)
+## 3. Run on your laptop against the same Google Cloud services
 
-| Variable | What it controls | Typical value |
+Run everything from the repo folder. The app reads `.env` by itself.
+
+| Step | Git Bash (Windows) | PowerShell | Mac / Linux |
+|---|---|---|---|
+| Create env | `python -m venv .venv` | `python -m venv .venv` | `python3 -m venv .venv` |
+| Activate | `source .venv/Scripts/activate` | `.venv\Scripts\Activate.ps1` | `source .venv/bin/activate` |
+| Install | `pip install -r requirements-dev.txt` | same | same |
+| Settings | `cp .env.example .env` | `Copy-Item .env.example .env` | `cp .env.example .env` |
+
+1. In `.env`, set `GOOGLE_CLOUD_PROJECT` and `GEMINI_MODEL`, and leave `MOCK_LLM="0"`.
+2. Sign in once for Vertex AI, BigQuery and Firestore:
+
+   ```bash
+   gcloud auth application-default login
+   ```
+
+3. Check every service for real, then start the app:
+
+   ```bash
+   python -m scripts.doctor --gcp
+   uvicorn app.main:app --reload --port 8080
+   ```
+
+What to expect:
+- **The doctor** lists the Gemini models, makes a grounded search, does a free BigQuery dry run (showing the bytes the radar would scan), and writes, reads and deletes a Firestore document. Each FAIL line comes with its fix.
+- **Run history** goes to local files on a laptop. Set `RUN_STORE="firestore"` to use Firestore locally too.
+- **If PowerShell blocks `Activate.ps1`**, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
+
+### Real data builds (needs internet)
+
+```bash
+python -m scripts.build_fad_reference                  # fad half-lives from real page views
+python -m scripts.build_company_profile --all          # Lindt, Cadbury India, Amul, Britannia
+python -m scripts.case_study --trend "Dubai chocolate" --market IN --company cadbury   # report in reports/
+```
+
+### Automated tests (no cloud, no internet)
+
+```bash
+pytest -q          # 47 passed; the tests use fakes shaped like the real Google responses
+```
+
+---
+
+## 4. Day to day
+
+| You want to… | Do this |
+|---|---|
+| Ship a change | `SETUP=0 PROJECT_ID=… GEMINI_MODEL=… ./deploy.sh` |
+| Check the live services | Open the app: the strip under the title shows each service as live or off |
+| See saved decisions | "Recent decisions" in the app, or the `trend2line_runs` collection in the Firestore console |
+| See errors | Cloud Run → trend2line → Logs, or `gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="trend2line"' --limit 50` |
+| Demo day | `MIN_INSTANCES=1` in the deploy command, then set it back to `0` afterwards |
+| Shut down | `gcloud run services delete trend2line --region asia-south1` |
+
+---
+
+## 5. Settings
+
+| Variable | Meaning | Cloud Run value (set by deploy.sh) |
 |---|---|---|
-| `GOOGLE_API_KEY` | Gemini key (comes from Secret Manager in the cloud) | set by `deploy.sh` |
-| `GEMINI_MODEL` | Which Gemini model to use | a Flash model ID from `smoke_gemini` |
-| `GEMINI_AUTH` | How to reach Gemini: `auto`, `ai_studio`, `vertex_express`, `vertex_adc` | `auto` |
-| `MOCK_LLM` | `1` = canned AI answers, live data | `0` in production |
-| `OFFLINE` | `1` = no internet at all, synthetic data (tests only) | `0` |
-| `WIKI_USER_AGENT` | Identifies you to Wikimedia; include a contact email | `Trend2Line/0.2 (you@example.com)` |
-| `HTTP_CACHE_HOURS` | How long Wikimedia answers are reused | `12` |
-| `MAX_WRITER_ATTEMPTS` | How many times the writer may retry after the fact-checker rejects it | `3` |
-
-Cloud Run settings in `deploy.sh`:
-- region `asia-south1`
-- 1 CPU and 1 GiB memory
-- 300-second timeout
-- at most 3 copies running
-- public access (`--allow-unauthenticated`)
+| `GOOGLE_CLOUD_PROJECT` | Project for Vertex AI, BigQuery and Firestore | your project |
+| `GOOGLE_CLOUD_LOCATION` | Vertex AI location | `global` |
+| `GEMINI_MODEL` | Gemini model ID | from `smoke_gemini` |
+| `GEMINI_AUTH` | `vertex_adc` (service account), `vertex_express`, `ai_studio`, `auto` | `vertex_adc` |
+| `ENABLE_GROUNDING` | Google Search grounding for launch discovery | `1` |
+| `ENABLE_BIGQUERY` / `BQ_MAX_GB` | Trend radar and its cost cap | `1` / `20` |
+| `RUN_STORE` | `firestore`, `local`, `off` (auto picks Firestore on Cloud Run) | `firestore` |
+| `MOCK_LLM`, `OFFLINE` | Test switches only | `0`, `0` |
+| `WIKI_USER_AGENT` | Identifies you to Wikimedia | set it with your email |
 
 ---
 
-## 9. Troubleshooting
+## 6. Troubleshooting
 
-| Symptom | Likely cause | Fix |
+| Symptom | Cause | Fix |
 |---|---|---|
-| Deploy fails with a permissions error | Cloud Build service account lacks a role | Copy the exact error; it usually names the missing role to grant |
-| Page shows "GEMINI_MODEL is not set" | Live mode without a model | Redeploy with `GEMINI_MODEL=...` |
-| 503 error mentioning Gemini, or 401 "API keys are not supported" | Key sent to the wrong endpoint, or Vertex AI not enabled | Run `smoke_gemini` locally; for `AQ.` keys enable `aiplatform.googleapis.com`; set `GEMINI_AUTH` explicitly |
-| "No Wikipedia article found" | The trend has no article yet | Try another spelling or the original-language name; very new trends may not be on Wikipedia |
-| Banner says the half-life reference is a placeholder | Fad reference not computed | See section 6c |
-| First request after a quiet period is slow | Cold start | Normal; use `--min-instances 1` on demo day |
+| `PERMISSION_DENIED` from Vertex AI | Missing role, or API off | Re-run `deploy.sh` with `SETUP=1`; locally run `gcloud auth application-default login` |
+| Model not found | Wrong ID, or model not offered in `GEMINI_LOCATION` | `python -m scripts.smoke_gemini`; keep `GEMINI_LOCATION=global` |
+| Grounding returns no sources | Model or region doesn't support it | `python -m scripts.doctor --gcp` shows it; launches then come only from the curated list |
+| Radar says BigQuery failed | API off, missing `bigquery.jobUser`, or the query exceeds `BQ_MAX_GB` | Re-run with `SETUP=1`; `doctor --gcp` shows the bytes the query would scan |
+| "Run history unavailable" | No Firestore database, or missing `datastore.user` | Re-run with `SETUP=1` |
+| Build fails on permissions | Cloud Build account lacks a role | The error names the role; grant it with `gcloud projects add-iam-policy-binding` |
+| `$'\r': command not found` | Windows line endings | `sed -i 's/\r$//' deploy.sh scripts/*.sh Dockerfile` |
+| First request is slow | Cold start | `MIN_INSTANCES=1` on demo day |
 
 ---
 
-## 10. Cost notes
+## 7. Cost notes
 
-The app is light. Cloud Run charges mainly while a request is being handled, and scales to zero when idle unless
-you set `--min-instances`. Gemini is charged per call: 2 to 5 per analysis, Flash models being the cheapest. Cloud
-Build charges for build minutes during deploys. Wikimedia and the open datasets are free.
+- **Cloud Run** charges mainly while handling requests, and scales to zero when idle.
+- **Gemini** is billed per call: about 3 to 6 per analysis, plus one grounded search. Results are cached.
+- **BigQuery** is capped per query by `BQ_MAX_GB`, and the radar is cached for 6 hours. `doctor --gcp` shows the scan size up front.
+- **Firestore** writes one document per analysis.
 
-Check current prices and free tiers on Google's pricing pages; they change. Keep the budget alert from section 3
-switched on.
+Check Google's current pricing pages, and keep a budget alert on.

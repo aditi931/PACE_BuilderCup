@@ -23,6 +23,19 @@ def default_plant() -> dict:
     return prepare_plant(_yaml("plant.yaml"))
 
 
+@lru_cache
+def companies() -> dict[str, dict]:
+    """Real company profiles built from public data (data/companies/*.yaml), keyed by file name."""
+    out = {}
+    folder = DATA_DIR / "companies"
+    for f in sorted(folder.glob("*.yaml")) if folder.is_dir() else []:
+        try:
+            out[f.stem] = prepare_plant(yaml.safe_load(f.read_text(encoding="utf-8")))
+        except Exception:
+            continue  # a broken profile must never break the app
+    return out
+
+
 def plant() -> dict:  # kept for older callers
     return default_plant()
 
@@ -43,7 +56,8 @@ def prepare_plant(raw: dict) -> dict:
             raise ValueError(f"SKU {sid} refers to unknown line {s.get('line')}")
         resolved = [tx.resolve(i) for i in s.get("ingredients", [])]
         sku = {**s, "free_from": s.get("free_from") or [], "resolved": resolved,
-               "allergens": sorted({a for r in resolved for a in r["allergens"]}),
+               # allergens from the ingredients, plus any the pack itself declares (real company profiles)
+               "allergens": sorted({a for r in resolved for a in r["allergens"]} | set(s.get("declared_allergens") or [])),
                "lineage": sorted({n for r in resolved for n in r["lineage"]})}
         skus[sid] = sku
         lines[s["line"]]["skus"][sid] = {"name": s["name"], "free_from": sku["free_from"]}
@@ -77,6 +91,12 @@ def free_from_claims() -> dict:
 @lru_cache
 def demo_trends() -> list[dict]:
     return _yaml("demo_trends.yaml")["trends"]
+
+
+@lru_cache
+def reference_launches() -> dict:
+    p = DATA_DIR / "reference_launches.yaml"
+    return _yaml("reference_launches.yaml") if p.exists() else {}
 
 
 @lru_cache
