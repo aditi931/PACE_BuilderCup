@@ -1,10 +1,321 @@
 {
-  "status": "placeholder",
-  "note": "ILLUSTRATIVE values. Run scripts/build_fad_reference.py to compute these from real Wikimedia pageviews. Verdicts are capped at CONDITIONAL until status is 'computed'.",
-  "flash_rise_days_max": 21,
+  "status": "computed",
+  "computed_on": "2026-10-18",
+  "method": "28-day smoothed Wikimedia pageviews per language edition; half-life = days from peak to first day below 50% of peak; flash = rise from 10% to peak within 45 days",
+  "flash_rise_days_max": 45,
   "classes": {
-    "flash": {"half_life_days": {"p25": 15, "median": 30, "p75": 45}},
-    "standard": {"half_life_days": {"p25": 45, "median": 120, "p75": 210}}
+    "flash": {
+      "half_life_days": {
+        "p25": 12.0,
+        "median": 24,
+        "p75": 28.0
+      },
+      "n": 13
+    },
+    "standard": {
+      "half_life_days": {
+        "p25": 39.8,
+        "median": 83.5,
+        "p75": 169.0
+      },
+      "n": 14
+    }
   },
-  "fads": []
+  "median_half_life_by_origin_region": {
+    "East Asia": 69,
+    "North America": 17,
+    "Global": 22,
+    "Europe": 152.5,
+    "Middle East": 89.0,
+    "Oceania": 175,
+    "Latin America": 76
+  },
+  "fads": [
+    {
+      "title": "Dalgona coffee",
+      "wiki": "en",
+      "origin_region": "East Asia",
+      "note": "2020 lockdown trend",
+      "peak_date": "2020-04-10",
+      "rise_days": 9,
+      "half_life_days": 24,
+      "class": "flash"
+    },
+    {
+      "title": "Cronut",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2013 bakery fad",
+      "peak_date": "2017-02-18",
+      "rise_days": 598,
+      "half_life_days": 14,
+      "class": "standard"
+    },
+    {
+      "title": "Unicorn Frappuccino",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2017 limited drink",
+      "peak_date": "2026-08-30",
+      "rise_days": 28,
+      "half_life_days": 14,
+      "class": "flash"
+    },
+    {
+      "title": "Grimace Shake",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2023 TikTok limited drink",
+      "peak_date": "2023-07-09",
+      "rise_days": 13,
+      "half_life_days": 31,
+      "class": "flash"
+    },
+    {
+      "title": "Cloud bread",
+      "wiki": "en",
+      "origin_region": "Global",
+      "note": "2020 TikTok",
+      "peak_date": "2023-06-13",
+      "rise_days": 0,
+      "half_life_days": 5,
+      "class": "flash"
+    },
+    {
+      "title": "Wonut",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2016 waffle-doughnut hybrid",
+      "peak_date": "2016-10-30",
+      "rise_days": 1,
+      "half_life_days": 28,
+      "class": "flash"
+    },
+    {
+      "title": "Prime (drink)",
+      "wiki": "en",
+      "origin_region": "Europe",
+      "note": "2022-2023 influencer drink",
+      "peak_date": "2023-02-27",
+      "rise_days": 42,
+      "half_life_days": 216,
+      "class": "flash"
+    },
+    {
+      "title": "Butter board",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2022",
+      "peak_date": "2022-10-17",
+      "rise_days": 13,
+      "half_life_days": 28,
+      "class": "flash"
+    },
+    {
+      "title": "Tanghulu",
+      "wiki": "en",
+      "origin_region": "East Asia",
+      "note": "2023 trend in Korea",
+      "peak_date": "2016-08-14",
+      "rise_days": 27,
+      "half_life_days": 3,
+      "class": "flash"
+    },
+    {
+      "title": "Dubai chocolate",
+      "wiki": "en",
+      "origin_region": "Middle East",
+      "note": "2024-2025",
+      "peak_date": "2025-04-22",
+      "rise_days": 126,
+      "half_life_days": 151,
+      "class": "standard"
+    },
+    {
+      "title": "Raindrop cake",
+      "wiki": "en",
+      "origin_region": "East Asia",
+      "note": "2014-2016",
+      "peak_date": "2023-12-30",
+      "rise_days": 771,
+      "half_life_days": 78,
+      "class": "standard"
+    },
+    {
+      "title": "Avocado toast",
+      "wiki": "en",
+      "origin_region": "Oceania",
+      "note": "2015-2021 cafe trend",
+      "peak_date": "2021-03-14",
+      "rise_days": 1399,
+      "half_life_days": 175,
+      "class": "standard"
+    },
+    {
+      "title": "Sushi burrito",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2015",
+      "peak_date": "2025-03-29",
+      "rise_days": 1528,
+      "half_life_days": 17,
+      "class": "standard"
+    },
+    {
+      "title": "Cosmic Crisp",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2019 apple launch",
+      "peak_date": "2019-12-28",
+      "rise_days": 73,
+      "half_life_days": 30,
+      "class": "standard"
+    },
+    {
+      "title": "Croffle",
+      "wiki": "en",
+      "origin_region": "East Asia",
+      "note": "2020-2021",
+      "peak_date": "2024-03-16",
+      "rise_days": 474,
+      "half_life_days": 443,
+      "class": "standard"
+    },
+    {
+      "title": "Pink sauce",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2022",
+      "peak_date": "2022-08-16",
+      "rise_days": 27,
+      "half_life_days": 12,
+      "class": "flash"
+    },
+    {
+      "title": "Charcoal ice cream",
+      "wiki": "en",
+      "origin_region": "North America",
+      "note": "2016",
+      "peak_date": "2019-05-09",
+      "rise_days": 0,
+      "half_life_days": 8,
+      "class": "flash"
+    },
+    {
+      "title": "Bubble tea",
+      "wiki": "en",
+      "origin_region": "East Asia",
+      "note": "long-running; usually sustained",
+      "peak_date": "2023-02-24",
+      "rise_days": 757,
+      "half_life_days": 3,
+      "class": "standard"
+    },
+    {
+      "title": "Birria",
+      "wiki": "en",
+      "origin_region": "Latin America",
+      "note": "2020-2021 tacos",
+      "peak_date": "2024-05-23",
+      "rise_days": 1825,
+      "half_life_days": 76,
+      "class": "standard"
+    },
+    {
+      "title": "Unicorn food",
+      "wiki": "en",
+      "origin_region": "Global",
+      "note": "2017 rainbow food",
+      "peak_date": "2017-04-30",
+      "rise_days": 8,
+      "half_life_days": 22,
+      "class": "flash"
+    },
+    {
+      "title": "Mochi donut",
+      "wiki": "en",
+      "origin_region": "East Asia",
+      "note": "2021",
+      "peak_date": "2024-03-31",
+      "rise_days": 373,
+      "half_life_days": 143,
+      "class": "standard"
+    },
+    {
+      "title": "Cottage cheese",
+      "wiki": "en",
+      "origin_region": "Global",
+      "note": "control item; usually sustained",
+      "peak_date": "2024-01-29",
+      "rise_days": 3134,
+      "half_life_days": 331,
+      "class": "standard"
+    },
+    {
+      "title": "Dubai-Schokolade",
+      "wiki": "de",
+      "origin_region": "Middle East",
+      "note": "German-language edition",
+      "peak_date": "2024-12-17",
+      "rise_days": 38,
+      "half_life_days": 27,
+      "class": "flash"
+    },
+    {
+      "title": "マリトッツォ",
+      "wiki": "ja",
+      "origin_region": "Europe",
+      "note": "Japanese-language edition",
+      "peak_date": "2021-07-18",
+      "rise_days": 72,
+      "half_life_days": 89,
+      "class": "standard"
+    },
+    {
+      "title": "탕후루",
+      "wiki": "ko",
+      "origin_region": "East Asia",
+      "note": "Korean-language edition",
+      "peak_date": "2023-09-11",
+      "rise_days": 100,
+      "half_life_days": 69,
+      "class": "standard"
+    },
+    {
+      "title": "크로플",
+      "wiki": "ko",
+      "origin_region": "East Asia",
+      "note": "Korean-language edition",
+      "peak_date": "2022-03-04",
+      "rise_days": 111,
+      "half_life_days": 390,
+      "class": "standard"
+    },
+    {
+      "title": "달고나 커피",
+      "wiki": "ko",
+      "origin_region": "East Asia",
+      "note": "Korean-language edition",
+      "peak_date": "2020-05-10",
+      "rise_days": 45,
+      "half_life_days": 45,
+      "class": "flash"
+    }
+  ],
+  "skipped": [
+    {
+      "title": "Maritozzo",
+      "wiki": "en",
+      "origin_region": "Europe",
+      "note": "2021 Japan boom",
+      "reason": "never fell below 50% of peak (sustained or still live)"
+    },
+    {
+      "title": "Crookie",
+      "wiki": "en",
+      "origin_region": "Europe",
+      "note": "2024",
+      "reason": "missing or too short"
+    }
+  ]
 }

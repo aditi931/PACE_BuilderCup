@@ -17,7 +17,10 @@
 #   AUTH=vertex_sa              vertex_sa (default: service account) | api_key (secret 'gemini-api-key')
 #   SETUP=1                     0 skips APIs/Firestore/IAM for faster redeploys
 #   MIN_INSTANCES=0             set 1 on demo day to avoid cold starts (small cost)
-#   WIKI_USER_AGENT             identify yourself to Wikimedia (include an email)
+#   WARMUP=1                    after deploying, run the demo scenarios once (fills caches, checks verdicts)
+#   SCHEDULE_WATCH=1            Cloud Scheduler job that runs the opportunity watch daily (WATCH_SCHEDULE, WATCH_TZ)
+#   WIKI_USER_AGENT             identify yourself to Wikimedia; must contain a URL or email (robot policy),
+#                               defaults to the service's own public URL
 set -euo pipefail
 PROJECT_ID=${PROJECT_ID:?set PROJECT_ID}
 GEMINI_MODEL=${GEMINI_MODEL:?set GEMINI_MODEL (list models: python -m scripts.smoke_gemini)}
@@ -28,9 +31,11 @@ FIRESTORE_LOCATION=${FIRESTORE_LOCATION:-asia-south1}
 AUTH=${AUTH:-vertex_sa}
 SETUP=${SETUP:-1}
 MIN_INSTANCES=${MIN_INSTANCES:-0}
-WIKI_USER_AGENT=${WIKI_USER_AGENT:-Trend2Line/0.3 (Cloud Run)}
+# Wikimedia answers 403 to user agents without contact details: default to this service's public URL
+EXISTING_URL=$(gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \n  --format='value(status.url)' 2>/dev/null || true)
+WIKI_USER_AGENT=${WIKI_USER_AGENT:-Trend2Line/0.4 (+${EXISTING_URL:-https://github.com/trend2line})}
 
-./scripts/check_no_anthropic.sh
+./scripts/check_gemini_only.sh
 
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
@@ -38,7 +43,7 @@ SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 if [[ "$SETUP" == "1" ]]; then
   echo "== Enabling APIs"
   gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
-    secretmanager.googleapis.com aiplatform.googleapis.com firestore.googleapis.com bigquery.googleapis.com \
+    secretmanager.googleapis.com aiplatform.googleapis.com firestore.googleapis.com bigquery.googleapis.com \n    cloudscheduler.googleapis.com \
     --project "$PROJECT_ID"
 
   echo "== Firestore (default) database"
@@ -63,7 +68,10 @@ fi
 
 # '@' as the list delimiter so values may contain commas or spaces
 ENV="^@^GOOGLE_CLOUD_PROJECT=$PROJECT_ID@GOOGLE_CLOUD_LOCATION=$GEMINI_LOCATION@GEMINI_MODEL=$GEMINI_MODEL"
+# Shared secret for the scheduled opportunity watch (POST /api/watch/run); rotated on every deploy
+WATCH_TOKEN=${WATCH_TOKEN:-$(openssl rand -hex 16)}
 ENV+="@MOCK_LLM=0@OFFLINE=0@RUN_STORE=firestore@ENABLE_GROUNDING=1@ENABLE_BIGQUERY=1@WIKI_USER_AGENT=$WIKI_USER_AGENT"
+ENV+="@WATCH_TOKEN=$WATCH_TOKEN"
 ARGS=(run deploy "$SERVICE" --source . --project "$PROJECT_ID" --region "$REGION" --service-account "$SA"
       --allow-unauthenticated --memory 1Gi --cpu 1 --timeout 300 --max-instances 3 --min-instances "$MIN_INSTANCES")
 if [[ "$AUTH" == "api_key" ]]; then
@@ -82,4 +90,22 @@ curl -fsS "$URL/api/config" | python3 -c "import json,sys; c=json.load(sys.stdin
 print('mode', c['mode'], '| gemini', s['gemini']['platform'], s['gemini']['auth'], s['gemini']['model'], \
 '| grounding', s['grounding'], '| bigquery', s['bigquery'], '| runs', s['run_store'], \
 '| fad reference', c['reference_status'], '| companies', len(c['companies']) - 1)"
+if [[ "${SCHEDULE_WATCH:-1}" == "1" ]]; then
+  echo "== Cloud Scheduler: daily opportunity watch"
+  JOB="$SERVICE-watch"
+  JOB_ARGS=(--project "$PROJECT_ID" --location "$REGION" --schedule "${WATCH_SCHEDULE:-0 6 * * *}"
+            --time-zone "${WATCH_TZ:-Asia/Kolkata}" --uri "$URL/api/watch/run" --http-method POST
+            --attempt-deadline 320s --quiet)
+  if gcloud scheduler jobs describe "$JOB" --project "$PROJECT_ID" --location "$REGION" >/dev/null 2>&1; then
+    gcloud scheduler jobs update http "$JOB" "${JOB_ARGS[@]}" --update-headers "X-Watch-Token=$WATCH_TOKEN" >/dev/null
+  else
+    gcloud scheduler jobs create http "$JOB" "${JOB_ARGS[@]}" --headers "X-Watch-Token=$WATCH_TOKEN" >/dev/null
+  fi
+  echo "   $JOB runs ${WATCH_SCHEDULE:-0 6 * * *} (${WATCH_TZ:-Asia/Kolkata}). Run it now:"
+  echo "   gcloud scheduler jobs run $JOB --project $PROJECT_ID --location $REGION"
+fi
+if [[ "${WARMUP:-1}" == "1" ]]; then
+  echo "== Warming up and checking the demo scenarios (skip with WARMUP=0)"
+  python3 scripts/warmup.py --url "$URL" || echo "   warm-up reported a problem; see above"
+fi
 echo "Open: $URL"

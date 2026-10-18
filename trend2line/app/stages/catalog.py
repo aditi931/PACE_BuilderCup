@@ -93,6 +93,24 @@ def demo_trends() -> list[dict]:
     return _yaml("demo_trends.yaml")["trends"]
 
 
+def demo_trend(trend: str) -> dict | None:
+    t = trend.strip().lower()
+    return next((d for d in demo_trends() if d["trend"].lower() == t and d.get("spec")), None)
+
+
+@lru_cache
+def impact_baseline() -> dict:
+    p = DATA_DIR / "impact.yaml"
+    return _yaml("impact.yaml") if p.exists() else {}
+
+
+@lru_cache
+def demo_scenarios() -> list[dict]:
+    """Ready-made input combinations for the demo (one per verdict). Verdicts are recomputed live, never stored."""
+    p = DATA_DIR / "demo_scenarios.yaml"
+    return _yaml("demo_scenarios.yaml")["scenarios"] if p.exists() else []
+
+
 @lru_cache
 def reference_launches() -> dict:
     p = DATA_DIR / "reference_launches.yaml"

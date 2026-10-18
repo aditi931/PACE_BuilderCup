@@ -26,7 +26,7 @@ import time
 import httpx
 import yaml
 
-from app.config import DATA_DIR, get_settings
+from app.config import CONTACT_URL, DATA_DIR, get_settings, user_agent_with_contact
 from app.stages.ingredients import taxonomy
 
 SEARCH = "https://world.openfoodfacts.org/api/v2/search"
@@ -134,7 +134,7 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=80)
     a = ap.parse_args()
     cfg = yaml.safe_load((DATA_DIR / "category_lines.yaml").read_text(encoding="utf-8"))
-    ua = os.environ.get("WIKI_USER_AGENT", get_settings().wiki_user_agent)
+    ua = user_agent_with_contact(os.environ.get("WIKI_USER_AGENT", get_settings().wiki_user_agent), CONTACT_URL)
     if a.all:
         items = yaml.safe_load((DATA_DIR / "companies.yaml").read_text(encoding="utf-8"))["companies"]
         built = 0

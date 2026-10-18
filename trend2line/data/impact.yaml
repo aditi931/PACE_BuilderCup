@@ -1,0 +1,7 @@
+# SAMPLE COMPANY INPUT: the "today" baseline the Impact panel compares a Trend2Line run against.
+# Replace with your own numbers; the UI labels them as company input. Money is never estimated by the app:
+# a value appears only when the user types their own sales figure into the panel.
+provenance: sample_company_input
+manual_review_days: 21        # typical elapsed days today for a cross-functional go/no-go on a trend product
+manual_review_functions: [R&D, QA and allergen control, regulatory, supply chain, marketing]
+currency: "₹"                 # used only to format the user's own sales figure

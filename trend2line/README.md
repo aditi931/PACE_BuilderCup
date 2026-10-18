@@ -44,6 +44,13 @@ You type a trend name (for example *Croffle*, *Tanghulu* or *Dubai chocolate*), 
 | **Market scan** | All 12 markets ranked, so you can see if another country is a better bet |
 | **Written recommendation** | A short summary, where every number has been fact-checked |
 | **Where every input came from** | Which parts are real public data and which are sample company data |
+| **What-if simulator** | Pick another line or a co-packer, change fad speed, expedite or delay: the verdict updates live |
+| **Impact of the decision** | Seconds to a verified answer, claims protected, days of margin; value at stake from your own sales figure |
+| **Ask Trend2Line** | Ask about the decision in plain words; Gemini answers from the run's evidence and code checks every number |
+| **Draft label** | Ingredient and allergen statements in the market's language (Arabic, Korean, Hindi ...), checked by code |
+| **Compare** | The same trend for every company, or for one company across the top markets |
+| **Decision brief** | A print-ready one-pager for the product committee |
+| **Opportunity watch** | Every morning, rising food trends are run against every company; the best windows wait on the home page |
 
 ## How it works, in plain words
 
@@ -90,10 +97,15 @@ come from the calculator, so the AI can't make up a convenient answer.
 | Labelling rules for 12 markets | Official regulator sites and reputable summaries, each with a link and a "how sure are we" badge | Researched |
 | Country population and income | World Bank | Real |
 | Place names (for "misleading origin" checks) | GeoNames world cities list | Real |
-| Company products, allergens, free-from claims | Real companies' products in Open Food Facts (Lindt, Cadbury India, Amul, Britannia), or a sample company | **Real products, inferred lines** / Sample |
+| Company products, allergens, free-from claims | Real companies' products in Open Food Facts (Lindt, Cadbury India, Amul, Britannia), two synthetic demo companies (Kaveri Dairy & Desserts, India; Hanbit Foods, Korea), or a sample company | **Real products, inferred lines** / **Synthetic demo** / Sample |
 | Time to shelf | Observed from real launches when available; otherwise your plant data, or sample data (flagged) | **Real (observed)** / Your data / Sample |
 | Real launches and the trend's origin | Press releases, trade press, retailer listings, news | Real, linked |
 | How long tasks take, equipment lead times | Sample figures | **Sample** |
+
+**About the demo companies.** Kaveri Dairy & Desserts (India: ice cream, flavoured milk, mithai, cookies) and
+Hanbit Foods (Korea: bakery, candy, chocolate, frozen snacks) are fictional, labelled "demo" everywhere, and used
+exactly as a company's own uploaded plant file would be. See `DEMO.md` for three ready-made scenarios (GO,
+CONDITIONAL, NO-GO) on real Wikipedia data.
 
 **About the sample company.** No company publishes its factory details, so the factory side uses an illustrative
 plant with chocolate, bakery, dairy/drinks and snack lines. A real company would upload its own file (there's a
@@ -165,7 +177,9 @@ Everything below runs live in the deployed app. Mock mode exists only for automa
 | **Vertex AI: Gemini** | Picks the right Wikipedia article, describes the product (from text or a photo), writes the recommendation that the fact-checker verifies. Runs through the Cloud Run service account; no API key needed. |
 | **Vertex AI: Google Search grounding** | Finds real company launches of *any* trend on the live web, with sources. Code checks every row before it's used. |
 | **BigQuery** | Trend radar: Google's public Trends data shows the top rising searches in each market; Gemini picks out the food trends; one click analyses one. |
-| **Firestore** | Saves every decision with its full evidence ("Recent decisions"), an audit trail you can reopen. |
+| **Firestore** | Saves every decision with its full evidence ("Recent decisions"), an audit trail you can reopen, and the latest opportunity watch. |
+| **Cloud Scheduler** | Runs the opportunity watch every morning: radar trends against every company. |
+| **Agent Development Kit** | `adk_app/`: the same pipeline as an ADK agent with three tools (`adk web` shows every tool call). |
 | **Cloud Run** | Runs the app; scales to zero when idle. |
 | **Cloud Build** | Builds the app and, during the build, refreshes the open data, computes fad half-lives and builds real company profiles. |
 | **Artifact Registry, Secret Manager, IAM, Cloud Logging** | Store the build, keep an optional key safe, grant exact permissions, keep logs. |
@@ -200,8 +214,9 @@ app/        the application (the researcher, calculator and fact-checker)
 data/       all the facts the app relies on: markets, ingredients, sample plant
 static/     the web page
 scripts/    data refresh and health checks (start with: python -m scripts.doctor)
-tests/      automatic checks (47 of them)
+tests/      automatic checks (59 of them)
 docs/TECHNICAL.md   developer details
 SETUP.md    Google Cloud setup and when each service is called
 ROADMAP.md  what to build next
+DEMO.md     three demo scenarios (GO, CONDITIONAL, NO-GO) with exact inputs
 ```

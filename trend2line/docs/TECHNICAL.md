@@ -12,7 +12,7 @@ Built for the Google Cloud AI Builder Cup 2026. Theme: **Manufacturing: Intellig
 | Input | Status | Source |
 |---|---|---|
 | Trend interest per market | **Real**, fetched live | Wikimedia pageviews, one series per language edition, linked through Wikidata |
-| Fad half-life reference | **Real** once computed (Cloud Build does it; or `python -m scripts.build_fad_reference`). Placeholder until then and verdicts are capped at CONDITIONAL | Wikimedia pageviews of ~29 past fads from several regions (`data/fad_candidates.csv`) |
+| Fad half-life reference | **Real**: computed from Wikimedia pageviews and committed in `data/fad_reference.json`; Cloud Build recomputes it and never replaces it with a worse one. Interest is a 28-day rolling mean (`SMOOTH_DAYS` in `app/stages/trend.py`) so one-day news spikes are not mistaken for fads; flash = rise from 10% to peak within 45 days | Wikimedia pageviews of ~29 past fads from several regions (`data/fad_candidates.csv`) |
 | Ingredients → allergens | **Real open data** | Open Food Facts ingredient + allergen taxonomies (ODbL), ~5,700 ingredients, many languages |
 | Market regulations (12 markets) | **Researched**; each rule shows its source URL and `verified_official`, `verified_secondary` or `needs_review` | `data/markets.yaml` |
 | Market size | **Real open data** | World Bank population (2025) and GDP (2023) |
@@ -122,6 +122,25 @@ data/                    Knowledge tables and downloaded sources (authoritative;
 scripts/                 refresh_data, build_fad_reference, smoke_gemini, smoke_live, discover_trends_bq
 tests/                   pytest: deterministic core, live path against a fake Wikimedia, end-to-end API
 ```
+
+## Engineering rules
+
+- **Gemini on Vertex AI is the only runtime AI** (google-genai SDK). `scripts/check_gemini_only.sh` runs at the
+  start of every `deploy.sh` and stops the deploy if another model SDK appears in `app/`, `adk_app/` or the
+  requirements.
+- **Deploy target is Cloud Run** in asia-south1, built by Cloud Build; nothing is hosted elsewhere.
+- **The LLM interprets; code computes.** Gemini picks the Wikipedia article, turns a trend or photo into a product
+  spec (plain ingredient names; code resolves allergens through the Open Food Facts taxonomy), writes the
+  narrative, drafts labels and answers questions. Every number, date, line capability, allergen and rule comes
+  from deterministic code over the tables in `data/`. The verdict is decided in code; Gemini explains it and
+  cannot change it.
+- **Every tool output is recorded** in the `EvidenceRegistry`, and every new kind of claim needs a verifier check.
+- **Only public open data or clearly labelled sample/demo company input.** No client data. Every regulation row
+  carries a source URL and a verification status.
+- **Nothing market-, product- or plant-specific lives in `app/`**: it belongs in `data/`.
+- **Keep `pytest -q` green**, with a test for every new deterministic rule. `OFFLINE=1` and `MOCK_LLM=1` are test
+  switches only.
+- **Google APIs move fast**: pin versions and check the current Google Cloud docs for model IDs and env vars.
 
 ## Known limitations
 

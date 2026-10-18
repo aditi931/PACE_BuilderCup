@@ -323,7 +323,7 @@ def test_no_credentials_defaults_to_mock(monkeypatch):
 
 def test_shell_scripts_use_unix_line_endings():
     from app.config import BASE_DIR
-    for f in ("deploy.sh", "Dockerfile", "scripts/check_no_anthropic.sh"):
+    for f in ("deploy.sh", "Dockerfile", "scripts/check_gemini_only.sh"):
         assert b"\r\n" not in (BASE_DIR / f).read_bytes(), f
 
 
@@ -372,7 +372,7 @@ def test_reference_matching_windows_benchmark_and_model_check():
     def launch(brand, date):
         return {"company": brand, "brand": brand, "product": "p", "market": "IN", "date": date,
                 "date_basis": "x", "source_title": "t", "source_url": "https://x"}
-    entry = {"launches": [launch("Early", "2024-06-01"), launch("A", "2025-01-31"), launch("B", "2025-03-15"),
+    entry = {"launches": [launch("Early", "2024-06-01"), launch("A", "2025-02-20"), launch("B", "2025-03-15"),
                           launch("C", "2025-06-01"), launch("Future", "2027-01-01")]}
     rows, windows = references.evaluate(entry, Store(), {"IN": ["en", "hi"]}, dt.date(2026, 10, 1))
     w = windows["IN"]
@@ -662,3 +662,178 @@ def test_run_store_auto_selection():
     assert _run_store("auto", "proj", "trend2line") == "firestore"   # on Cloud Run
     assert _run_store("auto", "proj", "") == "local"                # laptop
     assert _run_store("off", "proj", "x") == "off"
+
+
+def test_verifier_accepts_rounded_percentages():
+    from app.stages.verifier import _matches
+    assert _matches(20, 0.204) and _matches(21, 0.205) and _matches(0.204, 0.204)
+    assert not _matches(22, 0.204) and not _matches(0.5, 0.004)
+
+
+def test_user_agent_always_has_contact():
+    from app.config import user_agent_with_contact
+    assert user_agent_with_contact("Trend2Line/0.3 (Cloud Run)", "https://x.run.app") ==         "Trend2Line/0.3 (Cloud Run) (+https://x.run.app)"
+    assert user_agent_with_contact("T2L (me@example.com)", "https://x") == "T2L (me@example.com)"
+    assert "https://x" in user_agent_with_contact("", "https://x")
+
+
+def test_demo_scenarios_are_runnable_and_cover_every_verdict():
+    scen = catalog.demo_scenarios()
+    assert {s["expected"] for s in scen} == {"GO", "CONDITIONAL", "NO-GO"}
+    cos, markets = catalog.companies(), catalog.markets()["markets"]
+    c = TestClient(app)
+    for s in scen:
+        co = cos[s["company"]]
+        assert co["provenance"] == "demo_company_input" and s["sku_id"] in co["skus"] and s["market"] in markets
+        assert catalog.demo_trend(s["trend"]), s["trend"]          # reviewed spec, so the demo is reproducible
+        r = c.post("/api/run", data={"trend": s["trend"], "sku_id": s["sku_id"], "as_of": str(s["as_of"]),
+                                     "market": s["market"], "company": s["company"], "scan": "false"})
+        assert r.status_code == 200, r.text
+        j = r.json()
+        assert j["as_of"] == str(s["as_of"])
+        prov = {p["input"]: p["status"] for p in j["provenance"]}
+        assert prov["Product spec"] == "curated_spec" and prov["Plant, lines and SKUs"] == "demo_company_input"
+    cfg = c.get("/api/config").json()
+    assert len(cfg["scenarios"]) == 3 and cfg["companies"]["kaveri_dairy"]["kind"] == "demo"
+    assert cfg["reference"]["status"] == "computed"
+
+
+def test_demo_company_counts_as_own_plant_data():
+    """A demo company's plant file is used like an upload: no 'sample plant' caveat, real blast-radius hard stop."""
+    j = TestClient(app).post("/api/run", data={"trend": "Dubai chocolate", "sku_id": "KV-KULFI-PISTA-60",
+                                               "as_of": "2025-04-15", "market": "IN", "company": "kaveri_dairy",
+                                               "scan": "false"}).json()
+    assert not any("sample plant" in r for r in j["decision"]["downgrade_reasons"])
+    assert j["decision"]["hard_failures"] and j["decision"]["verdict"] != "GO"
+
+
+def test_langlinks_fallback_reads_wikipedia_language_links():
+    class Http:
+        def get(self, url, params=None, allow_404=False):
+            assert params["prop"] == "langlinks"
+            return {"query": {"pages": {"1": {"title": "Tanghulu", "langlinks": [{"lang": "ko", "*": "탕후루"}]}}}}
+    assert trend.langlinks(Http(), "Tanghulu") == {"en": "Tanghulu", "ko": "탕후루"}
+
+
+def test_simulator_options_reproduce_the_official_plan():
+    """The what-if panel re-applies only capture = 0.5 ** (T / h) and the thresholds to server-timed plans."""
+    for co, trend_name, sku, market, as_of in [("hanbit_foods", "Tanghulu", "HB-HOBAKYEOT-80", "KR", "2023-08-01"),
+                                               ("kaveri_dairy", "Dubai chocolate", "KV-KULFI-PISTA-60", "IN", "2025-04-15")]:
+        j = TestClient(app).post("/api/run", data={"trend": trend_name, "sku_id": sku, "as_of": as_of, "market": market,
+                                                   "company": co, "scan": "false"}).json()
+        sim, d = j["simulator"], j["decision"]
+        chosen = next(o for o in sim["options"] if o["id"] == sim["chosen"])
+        assert chosen["total_days"] == d["days_to_shelf"] and sim["options"][0]["id"] == "co_manufacturer"
+        h = sim["half_life_days"]["median"]
+        cap = 1.0 if sim["sustained"] else trend.capture_share(chosen["total_days"], h)
+        assert cap == d["capture_median"]
+        v = "GO" if cap >= sim["go_capture"] else "CONDITIONAL" if cap >= sim["conditional_capture"] else "NO-GO"
+        if v == "GO" and (chosen["hard"] or chosen["caveats"] or sim["official_hard_failures"]):
+            v = "CONDITIONAL"
+        assert v == d["verdict"]
+        assert all(o["hard"] == bool(o["conflicts"]) for o in sim["options"])   # demo plants are not samples
+    assert TestClient(app).get("/api/config").json()["impact"]["manual_review_days"] > 0
+
+
+# --- Assistants, compare and watch -------------------------------------------------------------------------
+def _kaveri_run(c):
+    return c.post("/api/run", data={"trend": "Dubai chocolate", "sku_id": "KV-KULFI-PISTA-60", "as_of": "2025-04-15",
+                                    "market": "IN", "company": "kaveri_dairy", "scan": "false"}).json()
+
+
+def test_label_draft_is_checked_by_code():
+    from app.models import LabelDraft
+    from app.stages import assist
+    c = TestClient(app)
+    run = _kaveri_run(c)
+    r = c.post("/api/label", json={"run": run, "language": "en"}).json()
+    assert r["check"]["passed"] and r["options"] == ["en", "hi"]
+    assert c.post("/api/label", json={"run": run}).json()["language"] == "hi"         # local language first
+    assert c.post("/api/label", json={"run": run, "language": "ko"}).status_code == 400
+    required = run["compliance"]["allergens_to_declare"]
+    good = {"product_name_local": "x", "ingredients_statement": "Zutaten: Milch",
+            "allergen_terms": [{"declaration": d, "local_term": f"T{i}"} for i, d in enumerate(required)],
+            "allergen_statement": "Enthält: " + ", ".join(f"T{i}" for i in range(len(required))), "back_translation": ""}
+    assert assist.check_label(LabelDraft.model_validate(good), run, "de")["passed"]
+    missing = good | {"allergen_terms": good["allergen_terms"][1:]}
+    assert not assist.check_label(LabelDraft.model_validate(missing), run, "de")["passed"]
+    not_printed = good | {"allergen_statement": "Enthält: T0"}
+    assert not assist.check_label(LabelDraft.model_validate(not_printed), run, "de")["passed"]
+    assert not assist.check_label(LabelDraft.model_validate(good), run, "ar")["passed"]   # Latin text for Arabic
+    assert assist.check_label(LabelDraft.model_validate(good | {
+        "ingredients_statement": "المكونات: حليب", "allergen_statement": "يحتوي على: " + ", ".join(
+            f"T{i}" for i in range(len(required)))}), run, "ar")["passed"]
+
+
+def test_ask_answers_are_verified():
+    c = TestClient(app)
+    run = _kaveri_run(c)
+    r = c.post("/api/ask", json={"run": run, "question": "Why this verdict?"}).json()
+    assert r["verification"]["passed"] and r["verification"]["claims"][0]["status"] == "verified"
+    assert c.post("/api/ask", json={"run": {"decision": {}}, "question": "Why?"}).status_code == 400
+    assert c.post("/api/ask", json={"run": run, "question": "x"}).status_code == 422
+
+
+def test_compare_runs_every_company_and_markets():
+    c = TestClient(app)
+    by_co = c.post("/api/compare", json={"trend": "Tanghulu", "as_of": "2023-08-01", "by": "companies",
+                                         "market": "KR"}).json()
+    assert len(by_co["rows"]) == 1 + len(catalog.companies())
+    assert all(r["market"] == "KR" and r["verdict"] in ("GO", "CONDITIONAL", "NO-GO") for r in by_co["rows"])
+    by_mk = c.post("/api/compare", json={"trend": "Tanghulu", "as_of": "2023-08-01", "by": "markets",
+                                         "company": "hanbit_foods", "markets": ["KR", "JP"]}).json()
+    assert [r["market"] for r in by_mk["rows"]] == ["KR", "JP"] and by_mk["rows"][1]["label_languages_needed"] == ["ja"]
+    assert c.post("/api/compare", json={"trend": "Tanghulu", "as_of": "2023-08-01", "by": "markets",
+                                        "company": "nope"}).status_code == 400
+
+
+def test_watch_needs_token_and_stores_ranked_results(tmp_path, monkeypatch):
+    from app import storage
+    monkeypatch.setenv("RUN_STORE", "local")
+    monkeypatch.setenv("CACHE_DIR", str(tmp_path))
+    monkeypatch.setenv("WATCH_TOKEN", "s3cret")
+    storage._STORE = None
+    c = TestClient(app)
+    try:
+        assert c.get("/api/watch").json()["status"] == "never_run"
+        assert c.post("/api/watch/run").status_code == 403
+        assert c.post("/api/watch/run", headers={"X-Watch-Token": "wrong"}).status_code == 403
+        r = c.post("/api/watch/run", headers={"X-Watch-Token": "s3cret"}).json()
+        assert r["source"] == "demo_list" and r["runs"] > 0
+        order = [{"GO": 0, "CONDITIONAL": 1, "NO-GO": 2}[x["verdict"]] for x in r["rows"] if "verdict" in x]
+        assert order == sorted(order)
+        assert c.get("/api/watch").json()["ran_at"] == r["ran_at"]
+    finally:
+        storage._STORE = None
+
+
+def test_watch_candidates_prefer_the_radar():
+    from app.stages import watch
+    radar_out = {"food_trends": [{"english_name": "Matcha", "market": "JP", "country": "JP", "percent_gain": 300,
+                                  "last_seen": "2026-10-16"},
+                                 {"english_name": "matcha ", "market": "JP", "country": "JP", "percent_gain": 200,
+                                  "last_seen": "2026-10-16"},
+                                 {"english_name": "Unknown", "market": None, "country": "XX", "percent_gain": 100}]}
+    out = watch.candidates(radar_out)
+    assert [(x["trend"], x["market"], x["source"]) for x in out] == [("Matcha", "JP", "bigquery_radar")]
+    assert watch.candidates(None)[0]["source"] == "demo_list"
+
+
+def test_adk_agent_builds_and_its_tools_run():
+    import importlib.util
+    import sys as _sys
+    folder = Path(__file__).resolve().parents[1] / "adk_app" / "trend2line_agent"
+    spec = importlib.util.spec_from_file_location("t2l_adk_tools", folder / "tools.py")  # no ADK needed
+    tools = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tools)
+    opts = tools.list_options()
+    assert "hanbit_foods" in opts["companies"] and "KR" in opts["markets"]
+    a = tools.assess_trend("Tanghulu", "hanbit_foods", "KR", "2023-08-01")
+    assert a["verdict"] in ("GO", "CONDITIONAL", "NO-GO") and a["days_to_shelf"] == 41 and a["market"] == "KR"
+    rows = tools.compare_companies("Tanghulu", "KR", "2023-08-01")
+    assert len(rows) == 1 + len(catalog.companies())
+    if importlib.util.find_spec("google.adk"):
+        if str(folder.parent) not in _sys.path:
+            _sys.path.insert(0, str(folder.parent))
+        from trend2line_agent.agent import root_agent
+        assert root_agent.name == "trend2line" and len(root_agent.tools) == 3

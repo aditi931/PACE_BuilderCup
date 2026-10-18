@@ -56,7 +56,7 @@ def check_repo() -> Path:
         report("FAIL", "Working folder", str(root), "cd into the repo folder (the one with app/, data/, deploy.sh)")
         sys.exit(1)
     report("OK", "Working folder", str(root))
-    for f in ["deploy.sh", "Dockerfile", "scripts/check_no_anthropic.sh"]:
+    for f in ["deploy.sh", "Dockerfile", "scripts/check_gemini_only.sh"]:
         p = root / f
         if p.exists() and b"\r\n" in p.read_bytes():
             report("FAIL", f"Line endings {f}", "Windows (CRLF); bash/Docker will fail",

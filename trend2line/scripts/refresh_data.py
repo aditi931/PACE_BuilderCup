@@ -22,9 +22,9 @@ import sys
 import httpx
 import yaml
 
-from app.config import DATA_DIR
+from app.config import CONTACT_URL, DATA_DIR
 
-UA = "Trend2Line/0.2 (data refresh; set WIKI_USER_AGENT with a contact)"
+UA = f"Trend2Line/0.4 (data refresh; +{CONTACT_URL})"
 
 
 def _sha256(path) -> str:

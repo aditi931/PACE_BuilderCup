@@ -21,27 +21,64 @@ WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 PAGEVIEWS = ("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{lang}.wikipedia/"
              "all-access/user/{title}/daily/{start}/{end}")
 Series = list[tuple[dt.date, int]]
+# Interest is read as a 28-day rolling mean: a launch decision lives on a monthly horizon, and a shorter window
+# turns one-day news spikes (a Google Doodle, a viral video) into fake "fads" with 3-day half-lives.
+# The fad reference (scripts/build_fad_reference.py) and the reference-launch windows use the same window.
+SMOOTH_DAYS = 28
+# A rise from 10% of peak to the peak within this many days (on the smoothed curve) is a flash fad.
+FLASH_RISE_DAYS_MAX = 45
+
+
+class WikimediaError(RuntimeError):
+    """Wikimedia refused or failed a request after retries (robot policy, rate limit, outage)."""
+
+
+RETRY_STATUS = {429, 500, 502, 503, 504}
 
 
 class Http:
-    """Tiny GET-JSON helper with a disk cache, so repeated demo runs are fast and polite to Wikimedia."""
+    """Tiny GET-JSON helper with a disk cache, so repeated demo runs are fast and polite to Wikimedia.
 
-    def __init__(self, user_agent: str, cache_dir: Path | None = None, ttl_hours: float = 12):
+    Wikimedia's robot policy (https://w.wiki/4wJS) answers 403 to user agents without contact details and 429
+    when a client is too fast, so 429/5xx are retried with backoff (honouring Retry-After) and failures are
+    never cached."""
+
+    def __init__(self, user_agent: str, cache_dir: Path | None = None, ttl_hours: float = 12,
+                 retries: int = 4, backoff: float = 1.5):
         self.ua, self.ttl = user_agent, ttl_hours * 3600
         self.dir = (cache_dir / "http") if cache_dir else None
         if self.dir:
             self.dir.mkdir(parents=True, exist_ok=True)
         self.requests = 0
+        self.retries, self.backoff = retries, backoff
 
     def get(self, url: str, params: dict | None = None, allow_404: bool = False):
         key = hashlib.sha256((url + json.dumps(params or {}, sort_keys=True)).encode()).hexdigest()[:32]
         path = self.dir / f"{key}.json" if self.dir else None
         if path and path.exists() and time.time() - path.stat().st_mtime < self.ttl:
             return json.loads(path.read_text(encoding="utf-8"))
-        r = httpx.get(url, params=params, headers={"User-Agent": self.ua}, timeout=20)
-        self.requests += 1
+        for attempt in range(self.retries + 1):
+            try:
+                r = httpx.get(url, params=params, headers={"User-Agent": self.ua}, timeout=20)
+            except httpx.TransportError as exc:
+                if attempt == self.retries:
+                    raise WikimediaError(f"network error contacting {httpx.URL(url).host}: {exc}") from exc
+                time.sleep(self.backoff * 2 ** attempt)
+                continue
+            self.requests += 1
+            if r.status_code in RETRY_STATUS and attempt < self.retries:
+                wait = r.headers.get("retry-after", "")
+                time.sleep(min(float(wait), 20) if wait.isdigit() else self.backoff * 2 ** attempt)
+                continue
+            break
         if r.status_code == 404 and allow_404:
             data = None
+        elif r.status_code == 403:
+            raise WikimediaError(f"{r.url.host} refused the request (403). Set WIKI_USER_AGENT to include a "
+                                 "contact URL or email, as Wikimedia's robot policy requires.")
+        elif r.status_code in RETRY_STATUS:
+            raise WikimediaError(f"{r.url.host} is rate-limiting or unavailable (HTTP {r.status_code}); "
+                                 "try again in a minute.")
         else:
             r.raise_for_status()
             data = r.json()
@@ -73,6 +110,19 @@ def sitelinks(http: Http, qid: str) -> dict[str, str]:
     for site, v in links.items():
         if site.endswith("wiki") and site not in ("commonswiki", "specieswiki", "metawiki", "wikidatawiki"):
             out[site[:-4].replace("_", "-")] = v["title"]
+    return out
+
+
+def langlinks(http: Http, title: str, lang: str = "en") -> dict[str, str]:
+    """Same {language: title} map as Wikidata sitelinks, read from Wikipedia itself (fallback when Wikidata is
+    unreachable)."""
+    data = http.get(WIKI_API.format(lang=lang), {"action": "query", "prop": "langlinks", "lllimit": 500,
+                                                  "redirects": 1, "titles": title, "format": "json"})
+    out = {}
+    for page in (data or {}).get("query", {}).get("pages", {}).values():
+        out[lang] = page.get("title", title)
+        for ll in page.get("langlinks", []):
+            out[ll["lang"]] = ll["*"]
     return out
 
 
@@ -161,7 +211,8 @@ def shelf_deadline(half_life: dict, as_of: dt.date, go_share: float, conditional
     return out
 
 
-def analyze(series: Series, as_of: dt.date, reference: dict, smooth_window: int = 7, min_points: int = 120) -> dict:
+def analyze(series: Series, as_of: dt.date, reference: dict, smooth_window: int = SMOOTH_DAYS,
+            min_points: int = 90) -> dict:
     pts = [(d, v) for d, v in series if d <= as_of]
     if len(pts) < min_points or sum(v for _, v in pts) == 0:
         return {"stage": "insufficient_data", "points": len(pts)}

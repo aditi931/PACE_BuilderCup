@@ -48,6 +48,7 @@ def assess_line(line_id: str, line: dict, steps: list[str], product_allergens: s
         "line_id": line_id,
         "line_name": line.get("name", line_id),
         "category": line.get("category", ""),
+        "capabilities": sorted(caps),
         "gaps": gaps,
         "gap_lead_days": gap_days,
         "unresolvable_steps": unresolvable,

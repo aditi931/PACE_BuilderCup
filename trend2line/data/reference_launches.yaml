@@ -2,7 +2,7 @@
 # listings, product packs). Used to show where real launches landed on the live interest curve.
 # Only public facts are stored; nothing here describes a company's internal plant data.
 # `date_basis` says what the date means; dates are as reported by the source, not verified with the company.
-# Researched 2026-10-17. Add launches for any trend by adding entries.
+# Researched 2026-10-17 (Dubai chocolate) and 2026-10-18 (tanghulu, Dalgona coffee). Add launches for any trend by adding entries.
 
 trends:
   dubai_chocolate:
@@ -76,3 +76,49 @@ trends:
           contains_source: "https://hme.heinemann-shop.com/en/global/lindt/lindt-dubai-style-milchschokoladenpralinen-mit-pistazien-engelshaar-fuellung/p/000000000001740663/"
           may_contain_white_version: [other nuts, peanuts, sesame seeds, other cereals containing gluten]
           may_contain_source: "https://fengany.com/products/lindt-dubai-style-white-chocolate-weiss-145g-copy"
+
+  tanghulu:
+    match: [tanghulu, tanghuru, bingtanghulu, candied fruit skewer, sugar coated fruit skewer]
+    launches:
+      - company: GS Retail (GS25, with sister brand Cookat)
+        brand: GS25
+        product: Ice Strawberry Tanghulu (frozen, sugar-coated strawberries)
+        market: KR
+        date: 2023-10-05
+        date_basis: "start of sales ('from the 5th') reported by Kyeongin Ilbo on 18 Oct 2023 and Korea JoongAng Daily on 30 Oct 2023"
+        positioning: first convenience-store tanghulu, about 17,000 stores nationwide
+        source_title: "Korea JoongAng Daily: Despite health concerns, tanghulu remains popular"
+        source_url: "https://www.koreajoongangdaily.com/business/think-english/11745668"
+
+      - company: GS Retail
+        brand: GS25
+        product: Tanghulu DIY kit (4 types)
+        market: KR
+        date: 2020-03-16
+        date_basis: "date of the article reporting 100,000 kits sold; the kit was on sale before this date"
+        positioning: make-at-home kit during social distancing, long before the 2023 Korean boom
+        source_title: "Asia Economy: GS25's 'Tanghuru Kit 4 Types' surpasses 100,000 units in cumulative sales"
+        source_url: "https://www.asiae.co.kr/en/article/2020031608252506479"
+
+  dalgona_coffee:
+    match: [dalgona coffee, whipped coffee, dalgona latte, frothy coffee]
+    launches:
+      - company: The Coffee Bean & Tea Leaf (Singapore)
+        brand: The Coffee Bean & Tea Leaf
+        product: Ready-made Dalgona Coffee (S$7.90 regular, takeaway)
+        market: SG
+        date: 2020-04-22
+        date_basis: "last-updated date of the article reporting it on sale at selected outlets; on sale on or before this date"
+        positioning: cafe chain, takeaway during Singapore's circuit breaker
+        source_title: "Seth Lui: Get a ready-made cup of Dalgona Coffee from The Coffee Bean & Tea Leaf SG"
+        source_url: "https://sethlui.com/the-coffee-bean-tea-leaf-dalgona-coffee-singapore-april-2020/"
+
+      - company: Ediya Coffee
+        brand: Ediya
+        product: Dalgona Latte and Dalgona Milk Tea (3,500 and 3,800 won)
+        market: KR
+        date: 2020-05-28
+        date_basis: launch date in the announcement ("on the 28th")
+        positioning: "cafe chain; non-coffee drinks topped with crushed dalgona candy, riding the dalgona coffee craze"
+        source_title: "Asia Economy: Ediya Coffee launches Dalgona Latte to save you the effort of stirring 400 times"
+        source_url: "https://www.asiae.co.kr/en/article/2020052808595632129"

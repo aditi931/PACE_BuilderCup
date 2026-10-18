@@ -1,9 +1,17 @@
+# Only what Cloud Build needs: Dockerfile, requirements.txt, app/, data/, scripts/, static/
 .git
+.gitattributes
+.gitignore
 .venv
+.env
+.env.example
 __pycache__
 *.pyc
-tests
 .pytest_cache
-.env
-adk_app
 .doctor_cache
+reports/
+tests/
+docs/
+adk_app/
+*.md
+requirements-dev.txt

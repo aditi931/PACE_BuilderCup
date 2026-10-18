@@ -17,10 +17,11 @@ import os
 import statistics
 import sys
 
-from app.config import DATA_DIR, get_settings
-from app.stages.trend import Http, fetch_pageviews, rolling_mean
+import time
 
-FLASH_RISE_DAYS_MAX = 21
+from app.config import CONTACT_URL, DATA_DIR, get_settings, user_agent_with_contact
+from app.stages.trend import FLASH_RISE_DAYS_MAX, SMOOTH_DAYS, Http, fetch_pageviews, rolling_mean
+
 START = dt.date(2015, 7, 1)
 
 
@@ -33,7 +34,7 @@ def pct(values: list[float], q: float) -> float:
 
 def measure(series):
     dates = [d for d, _ in series]
-    sm = rolling_mean([float(v) for _, v in series], 7)
+    sm = rolling_mean([float(v) for _, v in series], SMOOTH_DAYS)
     pk = max(range(len(sm)), key=sm.__getitem__)
     i = pk
     while i > 0 and sm[i] > 0.1 * sm[pk]:
@@ -45,12 +46,15 @@ def measure(series):
 
 def main() -> None:
     s = get_settings()
-    http = Http(os.environ.get("WIKI_USER_AGENT", s.wiki_user_agent), s.cache_dir, s.http_cache_hours)
+    http = Http(user_agent_with_contact(os.environ.get("WIKI_USER_AGENT", s.wiki_user_agent), CONTACT_URL),
+                s.cache_dir, s.http_cache_hours, retries=6)
     end = dt.date.today() - dt.timedelta(days=2)
     with open(DATA_DIR / "fad_candidates.csv", newline="", encoding="utf-8") as f:
         candidates = list(csv.DictReader(f))
     rows, skipped = [], []
-    for c in candidates:
+    for i, c in enumerate(candidates):
+        if i:
+            time.sleep(0.5)  # stay well under Wikimedia's rate limit (Cloud Build IPs are shared)
         try:
             series = fetch_pageviews(http, c["title"], START, end, c["wiki"])
         except Exception as exc:
@@ -81,7 +85,7 @@ def main() -> None:
     for r in rows:
         by_region.setdefault(r["origin_region"], []).append(r["half_life_days"])
     out = {"status": "computed" if complete else "partial", "computed_on": dt.date.today().isoformat(),
-           "method": "7-day smoothed Wikimedia pageviews per language edition; half-life = days from peak to "
+           "method": f"{SMOOTH_DAYS}-day smoothed Wikimedia pageviews per language edition; half-life = days from peak to "
                      "first day below 50% of peak; flash = rise from 10% to peak within "
                      f"{FLASH_RISE_DAYS_MAX} days",
            "flash_rise_days_max": FLASH_RISE_DAYS_MAX, "classes": classes,

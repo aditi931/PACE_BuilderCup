@@ -3,14 +3,18 @@ import datetime as dt
 import logging
 
 import yaml
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+import hmac
+
+from fastapi import Body, FastAPI, File, Form, Header, HTTPException, UploadFile
+from pydantic import BaseModel, Field
 from fastapi.responses import FileResponse
 
 from . import pipeline
 from .config import DATA_DIR, STATIC_DIR, get_settings
 from .llm import LLM, LLMError
 from .mock import MOCK_HANDLERS
-from .stages import catalog, radar
+from .stages import assist, catalog, radar, watch
+from .stages.trend import WikimediaError
 from .storage import get_store
 import time as _time
 
@@ -47,6 +51,12 @@ def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+def _kind(plant: dict) -> str:
+    """demo = synthetic demo company, public = real products from Open Food Facts, sample = illustrative plant."""
+    p = plant.get("provenance", "")
+    return "demo" if p == "demo_company_input" else "public" if p == "public_pack_data_inferred_lines" else "sample"
+
+
 def _services(s) -> dict:
     live = not s.mock_llm and not s.offline
     return {
@@ -76,12 +86,22 @@ def config() -> dict:
         "home_market": plant.get("home_market"),
         "skus": {k: f"{v['name']} ({v['line']})" for k, v in plant["skus"].items()},
         "companies": {"": {"name": f"{plant.get('company')} (sample)", "home_market": plant.get("home_market"),
+                           "kind": "sample", "lines": len(plant["lines"]),
+                           "note": "Illustrative multi-category plant",
                            "skus": {k: f"{v['name']} ({v['line']})" for k, v in plant["skus"].items()}}} | {
-            cid: {"name": c.get("company", cid), "home_market": c.get("home_market"), "note": c.get("note", ""),
-                  "products": len(c["skus"]), "built_on": c.get("built_on"),
+            cid: {"name": c.get("company", cid) + (" (demo)" if _kind(c) == "demo" else ""),
+                  "home_market": c.get("home_market"), "note": c.get("note", ""), "kind": _kind(c),
+                  "lines": len(c["lines"]), "products": len(c["skus"]) if _kind(c) == "public" else 0,
+                  "built_on": c.get("built_on"),
                   "skus": {k: f"{v['name']} ({v['line']})" for k, v in c["skus"].items()}}
-            for cid, c in catalog.companies().items()},
-        "markets": {k: {"name": v["name"], "status": v["allergen_source"]["status"]} for k, v in mk.items()},
+            for cid, c in sorted(catalog.companies().items(), key=lambda kv: (_kind(kv[1]) != "demo", kv[0]))},
+        "reference": {"status": ref.get("status"), "computed_on": ref.get("computed_on"), "n_fads": len(ref.get("fads", [])),
+                      "half_life_days": {k: v["half_life_days"]["median"] for k, v in ref.get("classes", {}).items()}},
+        "impact": catalog.impact_baseline(),
+        "scenarios": [{k: (v if isinstance(v, list) else str(v)) for k, v in sc.items()} for sc in catalog.demo_scenarios()],
+        "markets": {k: {"name": v["name"], "status": v["allergen_source"]["status"],
+                        "label_options": {c: assist.LANGUAGE_NAMES[c] for c in assist.label_languages(v)}}
+                    for k, v in mk.items()},
         "demo_trends": [{k: str(d[k]) for k in ("trend", "origin", "suggested_as_of", "suggested_market")}
                         for d in catalog.demo_trends()],
         "today": dt.date.today().isoformat(),
@@ -143,6 +163,7 @@ def run(trend: str = Form(..., min_length=2, max_length=120), sku_id: str = Form
     try:
         result = pipeline.run(trend.strip(), sku_id, as_of_date, market, img, llm, s, plant=plant, scan=scan)
         result["company"] = (plant or catalog.default_plant()).get("company", "")
+        result["company_id"] = "" if plant_file is not None and plant_file.filename else company
         result["services"] = _services(s)
         store = get_store(s)
         if store:
@@ -157,7 +178,13 @@ def run(trend: str = Form(..., min_length=2, max_length=120), sku_id: str = Form
         raise HTTPException(400, str(exc))
     except LLMError as exc:
         log.exception("LLM failure")
-        raise HTTPException(503, str(exc))
+        raise HTTPException(503, f"Gemini call failed: {exc}")
+    except WikimediaError as exc:
+        log.warning("Wikimedia failure: %s", exc)
+        raise HTTPException(503, f"Wikipedia data unavailable: {exc}")
+    except Exception as exc:  # never answer a bare 500: tell the user what broke
+        log.exception("run failed")
+        raise HTTPException(500, f"Analysis failed ({type(exc).__name__}): {str(exc)[:300]}")
 
 
 @app.get("/api/runs")
@@ -207,3 +234,144 @@ def radar_scan(days: int = 14) -> dict:
     out["days"] = days
     _RADAR_CACHE[days] = (_time.time(), out)
     return out
+
+
+# --- Assistants on a finished run (Gemini writes, code checks) ----------------------------------------------
+class RunRef(BaseModel):
+    run_id: str = ""
+    run: dict | None = None   # the run itself, when run history is off
+
+
+def _load_run(ref: RunRef) -> dict:
+    if ref.run_id:
+        store = get_store(get_settings())
+        found = store.get(ref.run_id) if store else None
+        if found:
+            return found
+    if ref.run and all(k in ref.run for k in ("decision", "compliance", "evidence", "spec", "lines", "bom")):
+        return ref.run
+    raise HTTPException(400, "Run not found: pass a saved run_id or the run result.")
+
+
+class LabelReq(RunRef):
+    language: str = ""
+
+
+@app.post("/api/label")
+def label(req: LabelReq = Body(...)) -> dict:
+    """Gemini drafts the ingredient and allergen statements in the market's language; code checks them."""
+    run = _load_run(req)
+    options = assist.label_languages(catalog.markets()["markets"][run["compliance"]["market"]])
+    language = req.language or next((o for o in options if o != "en"), "en")  # the local language first
+    if language not in options:
+        raise HTTPException(400, f"Language {language} is not offered for this market ({', '.join(options)}).")
+    try:
+        return assist.draft_label(run, language, LLM(get_settings(), MOCK_HANDLERS)) | {"options": options}
+    except LLMError as exc:
+        raise HTTPException(503, f"Gemini call failed: {exc}")
+
+
+class AskReq(RunRef):
+    question: str = Field(..., min_length=3, max_length=300)
+
+
+@app.post("/api/ask")
+def ask(req: AskReq = Body(...)) -> dict:
+    """Answer a question about the run from its evidence only; every claim is verified like the write-up."""
+    run = _load_run(req)
+    try:
+        return assist.ask(run, req.question.strip(), LLM(get_settings(), MOCK_HANDLERS))
+    except LLMError as exc:
+        raise HTTPException(503, f"Gemini call failed: {exc}")
+
+
+class CompareReq(BaseModel):
+    trend: str = Field(..., min_length=2, max_length=120)
+    as_of: str
+    by: str = Field("companies", pattern="^(companies|markets)$")
+    market: str = ""
+    company: str = ""
+    markets: list[str] = Field(default_factory=list, max_length=6)
+
+
+def _row(result: dict, company_id: str, plant: dict, market: str) -> dict:
+    d = result["decision"]
+    blast = result["allergen_blast_radius"]
+    return {"company_id": company_id, "company": plant.get("company", ""), "kind": _kind(plant),
+            "market": market, "market_name": catalog.markets()["markets"][market]["name"],
+            "verdict": d["verdict"], "route": d["route"], "line": d["line"], "days_to_shelf": d["days_to_shelf"],
+            "capture": d["capture_median"], "deadline_go_days": d["deadline_go_days"], "slack_days": d["slack_days"],
+            "hard_failures": d["hard_failures"], "caveats": d["downgrade_reasons"],
+            "claims_at_risk": len({(x["sku_id"], x["claim"]) for x in blast}),
+            "products_at_risk": len({x["sku_id"] for x in blast}), "stage": result["trend"]["stage"],
+            "basis": result["trend"]["basis"], "declarations": result["compliance"]["allergens_to_declare"],
+            "label_languages_needed": result["compliance"]["label_languages_needed"]}
+
+
+@app.post("/api/compare")
+def compare(req: CompareReq = Body(...)) -> dict:
+    """The same trend for every company (one market), or for one company across markets. Quick runs: same
+    verdict rules, no live launch discovery and no write-up."""
+    s = get_settings()
+    try:
+        as_of_date = dt.date.fromisoformat(req.as_of)
+    except ValueError:
+        raise HTTPException(400, "as_of must be YYYY-MM-DD")
+    markets = catalog.markets()["markets"]
+    if req.by == "companies":
+        plants = [("", catalog.default_plant())] + list(catalog.companies().items())
+        jobs = [(cid, p, req.market or p.get("home_market")) for cid, p in plants]
+    else:
+        plant = catalog.companies().get(req.company) if req.company else catalog.default_plant()
+        if plant is None:
+            raise HTTPException(400, f"Unknown company profile {req.company}")
+        jobs = [(req.company, plant, m) for m in (req.markets or [plant.get("home_market")])]
+    rows, llm = [], LLM(s, MOCK_HANDLERS)
+    for cid, plant, market in jobs:
+        if market not in markets:
+            raise HTTPException(400, f"Unknown market {market}")
+        try:
+            result = pipeline.run(req.trend.strip(), next(iter(plant["skus"])), as_of_date, market, None, llm, s,
+                                  plant=plant, scan=False, quick=True)
+            rows.append(_row(result, cid, plant, market))
+        except (pipeline.PipelineError, WikimediaError, LLMError) as exc:
+            rows.append({"company_id": cid, "company": plant.get("company", ""), "kind": _kind(plant),
+                         "market": market, "market_name": markets[market]["name"], "error": str(exc)[:300]})
+    return {"trend": req.trend, "as_of": req.as_of, "by": req.by, "rows": rows}
+
+
+# --- Opportunity watch (Cloud Scheduler calls /api/watch/run once a day) ------------------------------------
+@app.get("/api/watch")
+def watch_latest() -> dict:
+    store = get_store(get_settings())
+    if not store:
+        return {"status": "off"}
+    try:
+        latest = store.get_watch()
+    except Exception as exc:
+        raise HTTPException(503, f"Watch results unavailable ({store.kind}): {exc}")
+    return latest | {"status": "ok"} if latest else {"status": "never_run"}
+
+
+@app.post("/api/watch/run")
+def watch_run(x_watch_token: str = Header("")) -> dict:
+    s = get_settings()
+    if s.watch_token:
+        if not hmac.compare_digest(x_watch_token, s.watch_token):
+            raise HTTPException(403, "Wrong or missing X-Watch-Token.")
+    elif s.on_cloud_run:
+        raise HTTPException(403, "Set WATCH_TOKEN (deploy.sh does) to enable the scheduled watch.")
+    try:
+        radar_out = radar_scan(14) if _services(s)["bigquery"] else None
+    except HTTPException as exc:
+        log.warning("watch: radar unavailable (%s); using the demo trend list", exc.detail)
+        radar_out = None
+    cands = watch.candidates(radar_out)
+    result = watch.run(cands, dt.date.today() - dt.timedelta(days=1), LLM(s, MOCK_HANDLERS), s)
+    store = get_store(s)
+    if store:
+        try:
+            store.save_watch(result)
+        except Exception as exc:
+            result["store_error"] = str(exc)[:200]
+    return result

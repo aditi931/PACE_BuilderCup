@@ -1,0 +1,116 @@
+# SYNTHETIC DEMO COMPANY. Kaveri Dairy & Desserts is fictional: no real company, plant or product is described.
+# It is modelled on a typical mid-size Indian dairy co-operative style business (ice cream, flavoured milk,
+# mithai, bakery) so the demo has a realistic second portfolio. Line capabilities, rates and SKUs are invented
+# but plausible; ingredients resolve through the real Open Food Facts taxonomy like any uploaded plant file.
+company: "Kaveri Dairy & Desserts Pvt Ltd"
+provenance: demo_company_input
+note: "Synthetic demo company · Bengaluru, Karnataka · ice cream, flavoured milk, mithai and cookies"
+hq: "Bengaluru, Karnataka, India"
+home_market: IN
+base_label_languages: [en, hi]
+
+lines:
+  IC1:
+    name: Ice cream line IC1 (continuous freezer, Hosur plant)
+    category: frozen
+    capabilities: [high_shear_mixing, pasteuriser, homogeniser, continuous_freezer, cup_filler_sealer, blast_freezer]
+    rate_kg_h: 1800
+  IC2:
+    name: Kulfi and stick novelties IC2
+    category: frozen
+    capabilities: [cooking_kettle, high_shear_mixing, pasteuriser, blast_freezer, tray_sealer]
+    rate_kg_h: 600
+  FM1:
+    name: Flavoured milk and cold coffee FM1 (UHT bottles)
+    category: dairy_beverage
+    capabilities: [high_shear_mixing, pasteuriser, homogeniser, liquid_filler, cup_filler_sealer, cooking_kettle]
+    rate_kg_h: 4000
+  MS1:
+    name: Mithai and milk sweets MS1
+    category: confectionery
+    capabilities: [cooking_kettle, cooling_tunnel, guillotine, tray_sealer]
+    rate_kg_h: 250
+  BK1:
+    name: Cookies and rusk line BK1 (Mysuru plant)
+    category: bakery
+    capabilities: [dough_mixer, proofer, oven, cooling_tunnel, guillotine, flow_wrap]
+    rate_kg_h: 900
+
+skus:
+  KV-VAN-500:
+    name: Kaveri Classic Vanilla Ice Cream 500 ml
+    line: IC1
+    format: frozen
+    ingredients: [milk, cream, sugar, milk powder, vanilla]
+    process_steps: [mixing, pasteurisation, homogenisation, ice_cream_freezing, cup_filling]
+    free_from: [egg_free, nut_free]
+  KV-MANGO-SOR-100:
+    name: Alphonso Mango Sorbet Cup 100 ml
+    line: IC1
+    format: frozen
+    ingredients: [mango, sugar, water, lemon juice]
+    process_steps: [mixing, pasteurisation, ice_cream_freezing, cup_filling]
+    free_from: [egg_free, nut_free]
+  KV-CHOCO-CONE-110:
+    name: Choco Crunch Cone 110 ml
+    line: IC1
+    format: frozen
+    ingredients: [milk, cream, sugar, cocoa powder, wheat flour, soy lecithin]
+    process_steps: [mixing, pasteurisation, homogenisation, ice_cream_freezing, cup_filling]
+    free_from: [egg_free]
+  KV-KULFI-PISTA-60:
+    name: Kesar Pista Kulfi Stick 60 ml
+    line: IC2
+    format: frozen
+    ingredients: [milk, sugar, pistachio, saffron, cardamom]
+    process_steps: [cooking_kettle, mixing, pasteurisation, freezing, tray_sealing]
+    free_from: [egg_free]
+  KV-KULFI-MALAI-60:
+    name: Malai Kulfi Stick 60 ml
+    line: IC2
+    format: frozen
+    ingredients: [milk, sugar, cardamom]
+    process_steps: [cooking_kettle, mixing, pasteurisation, freezing, tray_sealing]
+    free_from: [egg_free, gluten_free]
+  KV-BADAM-200:
+    name: Badam Milk 200 ml
+    line: FM1
+    format: beverage
+    ingredients: [milk, sugar, almond, saffron, cardamom]
+    process_steps: [mixing, pasteurisation, homogenisation, liquid_filling]
+    free_from: [egg_free, gluten_free]
+  KV-COLDCOFFEE-180:
+    name: Filter Cold Coffee 180 ml
+    line: FM1
+    format: beverage
+    ingredients: [milk, coffee, sugar]
+    process_steps: [mixing, pasteurisation, homogenisation, liquid_filling]
+    free_from: [egg_free, gluten_free, nut_free]
+  KV-MYSOREPAK-250:
+    name: Ghee Mysore Pak 250 g
+    line: MS1
+    format: other
+    ingredients: [ghee, chickpea flour, sugar]
+    process_steps: [cooking_kettle, cooling, cutting, tray_sealing]
+    free_from: [egg_free, nut_free]
+  KV-PEDA-200:
+    name: Dharwad Peda 200 g
+    line: MS1
+    format: other
+    ingredients: [milk, sugar, cardamom]
+    process_steps: [cooking_kettle, cooling, cutting, tray_sealing]
+    free_from: [egg_free, gluten_free, nut_free]
+  KV-OSMANIA-200:
+    name: Osmania Butter Biscuits 200 g
+    line: BK1
+    format: bakery
+    ingredients: [wheat flour, butter, sugar, milk powder, salt]
+    process_steps: [dough_mixing, baking, cooling, wrapping]
+    free_from: [egg_free, nut_free]
+  KV-RUSK-300:
+    name: Milk Rusk 300 g
+    line: BK1
+    format: bakery
+    ingredients: [wheat flour, sugar, palm oil, milk powder, yeast]
+    process_steps: [dough_mixing, proofing, baking, cooling, cutting, wrapping]
+    free_from: [egg_free]

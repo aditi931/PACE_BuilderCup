@@ -37,7 +37,7 @@ def _curve(store, langs: list[str]) -> tuple[list[dt.date], list[float], list[st
     native = [lg for lg in langs if lg != "en" and store.get(lg)]
     used = native or (["en"] if store.get("en") else [])
     series = T.combine([store.get(lg) for lg in used])
-    return [d for d, _ in series], T.rolling_mean([float(v) for _, v in series], 7), used
+    return [d for d, _ in series], T.rolling_mean([float(v) for _, v in series], T.SMOOTH_DAYS), used
 
 
 def window(dates: list[dt.date], sm: list[float], as_of: dt.date) -> dict | None:

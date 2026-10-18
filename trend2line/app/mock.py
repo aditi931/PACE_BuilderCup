@@ -97,3 +97,29 @@ def radar_classify(prompt: str, ctx: dict) -> dict:
 
 MOCK_HANDLERS = {"deconstruct": deconstruct, "pick_article": pick_article, "write_plan": write_plan,
                  "discover_launches": discover_launches, "radar_classify": radar_classify}
+
+
+def draft_label(prompt: str, ctx: dict) -> dict:
+    """MOCK label: English wording whatever the language (the script check then fails for non-Latin markets)."""
+    run = ctx["run"]
+    labels = [d["label"] for d in run["compliance"]["declarations"]]
+    names = ", ".join(i["name"] for i in run["spec"]["ingredients"])
+    return {"product_name_local": run["spec"]["product_name"], "ingredients_statement": f"Ingredients: {names}.",
+            "allergen_terms": [{"declaration": x, "local_term": x} for x in labels],
+            "allergen_statement": "Contains: " + ", ".join(labels) + "." if labels else "",
+            "back_translation": "MOCK draft (MOCK_LLM=1): not translated."}
+
+
+def ask(prompt: str, ctx: dict) -> dict:
+    """MOCK answer: restates the decision with one verifiable number."""
+    run = ctx["run"]
+    d, idx = run["decision"], run.get("evidence_index", {})
+    tl = idx.get(f"timeline_{d['route']}")
+    cap = round(d["capture_median"] * 100)
+    return {"answer": f"MOCK answer: the verdict is {d['verdict']} because about {cap}% of today's interest is "
+                      f"left when the product reaches shelf.",
+            "claims": [{"text": f"{cap}% of today's interest is left at launch.", "kind": "numeric",
+                        "evidence_ids": [tl] if tl else [], "field": "capture.median", "value": cap}]}
+
+
+MOCK_HANDLERS.update({"draft_label": draft_label, "ask": ask})
